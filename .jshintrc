@@ -1,0 +1,13 @@
+{
+    "strict" : true,
+    "indent" : 2,
+    "maxlen" : 120,
+    "browser" : true,
+    "unused" : true,
+    "node" : true,
+    "undef" : true,
+    "devel" : true,
+    "globals": {
+        "$": true
+    }
+}
