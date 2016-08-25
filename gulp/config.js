@@ -66,6 +66,11 @@ module.exports = {
         entries: jsSrc + '/imagePush.js',
         build: build + '/js',
         outputName: 'imagePush.js'
+      },
+      {
+        entries: jsSrc + '/webImagePush.js',
+        build: build + '/js',
+        outputName: 'webImagePush.js'
       }
     ]
   },
