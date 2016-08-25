@@ -11,6 +11,7 @@ body{
 	margin-top: 44px;
 }
 .main{
+	text-align: center;
 	padding-left:0px;
 	margin:auto;
 }
@@ -73,7 +74,19 @@ body{
 }
 
 /*お絵かきする部分のCSS*/
+/*
 .canvas{
+	
+	width:640px;
+	height:640px;
+	
+	width:320px;
+	height:320px;
+	box-sizing: border-box;
+	border:2px solid #ccc;
+	
+}*/
+canvas{
 	/*
 	width:640px;
 	height:640px;
@@ -83,16 +96,7 @@ body{
 	box-sizing: border-box;
 	border:2px solid #ccc;
 }
-.canvas {
-	canvas{
-		/*
-		width:640px;
-		height:640px;
-		*/
-		width:320px;
-		height:320px;
-	}
-}
+
 /*削除ボタンのCSS*/
 #delete_button{
 	width:100%;
