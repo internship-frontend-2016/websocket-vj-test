@@ -1,3 +1,4 @@
+
 onload=function(){
     var socket =io();
     //サーバーからデータを受け取る
@@ -9,17 +10,16 @@ onload=function(){
     });
 }
 
-
-function init(imgData){
-
+function init(){
     // canvasエレメントを取得
     var c = document.getElementById('canvas');
     c.width = 500;
     c.height = 300;
     
+    console.log("hi");
     // webglコンテキストを取得
     var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-    
+    console.log(gl);
     // 頂点シェーダとフラグメントシェーダの生成
     var v_shader = create_shader('vs');
     var f_shader = create_shader('fs');
@@ -109,13 +109,13 @@ function init(imgData){
     var texture = null;
     
     // テクスチャを生成
-    create_texture(imgData);
+    create_texture("../img/test.jpg");
     
     // カウンタの宣言
     var count = 0;
     
     // 恒常ループ
-    function loop(){
+    (function loop(){
         // canvasを初期化
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clearDepth(1.0);
@@ -144,9 +144,9 @@ function init(imgData){
         gl.flush();
         
         // ループのために再帰呼び出し
-        //setTimeout(arguments.callee, 1000 / 30);
+        //setTimeout(loop, 1000 / 30);
         requestAnimationFrame(loop);
-    }
+    })();
     
     // シェーダを生成する関数
     function create_shader(id){
@@ -286,7 +286,12 @@ function init(imgData){
             
             // テクスチャへイメージを適用
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-            
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+
+
             // ミップマップを生成
             gl.generateMipmap(gl.TEXTURE_2D);
             
