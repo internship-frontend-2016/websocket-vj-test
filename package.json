@@ -13,6 +13,7 @@
     "browser-sync": "~2.8.2",
     "browserify": "~11.0.1",
     "del": "^2.0.2",
+    "express": "^4.14.0",
     "gulp": "~3.9.0",
     "gulp-autoprefixer": "~2.3.1",
     "gulp-cached": "~1.1.0",
@@ -38,6 +39,7 @@
     "pretty-hrtime": "~1.0.0",
     "require-dir": "~0.3.0",
     "run-sequence": "^1.1.2",
+    "socket.io": "^1.4.8",
     "vinyl-buffer": "~1.0.0",
     "vinyl-source-stream": "~1.1.0",
     "watchify": "~3.3.1"
@@ -52,5 +54,9 @@
   },
   "author": "",
   "license": "BSD",
-  "readmeFilename": "README.md"
+  "readmeFilename": "README.md",
+  "engines": {
+    "node": "4.5.0",
+    "npm": "2.15.9"
+  }
 }

@@ -10,7 +10,7 @@ module.exports = {
     'copy' : src + '/copy',
     'sass' : src + '/sass/**/*.scss',
     'ejs'  : [src + '/**/*.ejs', '!' + src + '/**/_*.ejs'],
-    'imgCopy'  : [src + '/img/**/*.{gif,jpg,jpeg,png,svg}', '!' +src+ '/img/sprite/**/*'],
+    'imgCopy'  : [src + '/img/**/*.{gif,jpg,jpeg,png,svg,mp4}', '!' +src+ '/img/sprite/**/*'],
     'img'  : [src + '/img/**/*.{gif,jpg,jpeg,png,svg}', '!' +src+ '/img/sprite/**/*']
   },
 
@@ -43,9 +43,19 @@ module.exports = {
   browserify: {
     bundleConfigs: [
       {
-        entries: jsSrc + '/main.js',
+        entries: jsSrc + '/vj-controller.js',
         build: build + '/js',
-        outputName: 'main.js'
+        outputName: 'vj-controller.js'
+      },
+      {
+        entries: jsSrc + '/vj-screen.js',
+        build: build + '/js',
+        outputName: 'vj-screen.js'
+      },
+      {
+        entries: jsSrc + '/vj-screen-test.js',
+        build: build + '/js',
+        outputName: 'vj-screen-test.js'
       }
     ]
   },
@@ -60,7 +70,8 @@ module.exports = {
   jsLibConcat: {
     name: 'lib.js',
     srcs: [
-      './node_modules/jquery/dist/jquery.min.js'
+      './node_modules/jquery/dist/jquery.min.js',
+      jsSrc+'/lib/minMatrixb.js'
     ],
     build: build + '/js'
   }
