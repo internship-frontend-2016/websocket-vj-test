@@ -2,8 +2,12 @@ onload=function(){
 	var socket=io();
 	var canvas=document.getElementById("myCanvas");
 	var c=canvas.getContext("2d");
+/*
 	var w=640;
 	var h=640;
+*/
+	var w=320;
+	var h=320;
 	var drawing=false;
 	var oldPos;
 
