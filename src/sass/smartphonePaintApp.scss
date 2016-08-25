@@ -1,0 +1,114 @@
+/*グローバルな設定*/
+*{
+	margin:0px;
+	padding:0px;
+}
+body{
+	width:100%;
+}
+.title{
+	padding: 10px;
+	margin-top: 44px;
+}
+.main{
+	padding-left:0px;
+	margin:auto;
+}
+/*色や太さを選択する部分のCSS*/
+.toolbar li{
+	width:44px;
+	height:44px;
+	margin:auto;
+	list-style-type: none;
+	border:1px solid #ccc;
+	border-radius: 10px;
+	display: inline-block;
+	/*float: left;*/
+}
+#black{
+	background-color:black;
+}
+#blue{
+	background-color:blue;
+}
+#red{
+	background-color:red;
+}
+#green{
+	background-color:green;
+}
+
+#small{
+/*
+	text-align: center;
+	line-height:44px;
+	font-size:100%;
+*/
+	position: relative;
+}
+#middle{
+	position: relative;
+}
+#large{
+	position: relative;
+}
+.circle_small{
+	position: absolute;
+	top:0px;
+	bottom: 0px;
+	left: 0px;
+	right:0px;
+	margin:auto;
+	width:15px;
+    height:15px;
+    background:#000000;
+    border-radius: 100px;
+    -webkit-border-radius: 100px;
+    -moz-border-radius: 100px;
+}
+.circle_middle{
+	position: absolute;
+	top:0px;
+	bottom: 0px;
+	left: 0px;
+	right:0px;
+	margin:auto;
+	width:30px;
+    height:30px;
+    background:#000000;
+    border-radius: 100px;
+    -webkit-border-radius: 100px;
+    -moz-border-radius: 100px;
+}
+.circle_large{
+	position: absolute;
+	top:0px;
+	bottom: 0px;
+	left: 0px;
+	right:0px;
+	margin:auto;
+	width:40px;
+    height:40px;
+    background:#000000;
+    border-radius: 100px;
+    -webkit-border-radius: 100px;
+    -moz-border-radius: 100px;
+}
+/*お絵かきする部分のCSS*/
+.canvas{
+	width:640px;
+	height:640px;
+	box-sizing: border-box;
+	border:2px solid #ccc;
+}
+.canvas canvas{
+	width:640px;
+	height:640px;
+
+}
+/*削除ボタンのCSS*/
+#delete_button{
+	width:450px;
+	height:44px;
+	margin-top:10px;
+}

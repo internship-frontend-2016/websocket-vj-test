@@ -56,6 +56,11 @@ module.exports = {
         entries: jsSrc + '/vj-screen-test.js',
         build: build + '/js',
         outputName: 'vj-screen-test.js'
+      },
+      {
+        entries: jsSrc + '/smartphonePaintApp.js',
+        build: build + '/js',
+        outputName: 'smartphonePaintApp.js'
       }
     ]
   },
