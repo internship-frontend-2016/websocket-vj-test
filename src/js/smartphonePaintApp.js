@@ -6,8 +6,8 @@ onload=function(){
 	var w=640;
 	var h=640;
 */
-	var w=320;
-	var h=320;
+	var w=316;
+	var h=316;
 	var drawing=false;
 	var oldPos;
 
