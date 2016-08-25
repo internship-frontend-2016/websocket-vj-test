@@ -95,12 +95,14 @@ body{
 }
 /*削除ボタンのCSS*/
 #delete_button{
-	width:450px;
+	width:100%;
 	height:44px;
 	margin-top:10px;
+	display: block;
 }
 #toImage_button{
-	width:450px;
+	width:100%;
 	height:44px;
 	margin-top:10px;
+	display: block;
 }
