@@ -10,7 +10,7 @@ onload=function(){
     });
 }
 
-function init(){
+function init(img_data){
     // canvasエレメントを取得
     var c = document.getElementById('canvas');
     c.width = 500;
@@ -109,8 +109,8 @@ function init(){
     var texture = null;
     
     // テクスチャを生成
-    create_texture("../img/test.jpg");
-    
+//    create_texture("../img/test.jpg");
+    create_texture(img_data);
     // カウンタの宣言
     var count = 0;
     
