@@ -20,6 +20,13 @@ io.on("connection",function(socket){
 		io.emit("vjActionFromServer",data);
 		//socket.broadcast.emit("chat message",msg);
 	});
+
+	//smartphonePaintAppから送られてきた
+	socket.on("pushImageFromClient",function(data){
+		console.log("pushImageFromClient::"+data);
+		io.emit("pushImageFromServer",data);
+		//socket.broadcast.emit("chat message",msg);
+	});	
 	socket.on("disconnect",function(){
 		console.log("user disconnected");
 	});

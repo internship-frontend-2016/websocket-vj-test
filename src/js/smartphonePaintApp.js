@@ -1,4 +1,5 @@
 onload=function(){
+	var socket=io();
 	var canvas=document.getElementById("myCanvas");
 	var c=canvas.getContext("2d");
 	var w=640;
@@ -8,6 +9,11 @@ onload=function(){
 
 	canvas.width=w;
 	canvas.height=h;
+
+	//背景は白になる
+	c.fillStyle="rgb(255,255,255)";
+	c.fillRect(0,0,$(canvas).width(),$(canvas).height());
+
 	c.strokeStyle="#000000";
 	c.lineWidth=5;
 	c.lineJoin="round";
@@ -78,7 +84,10 @@ onload=function(){
 	});
 
 	$("#delete_button").on("click",function(){
-		c.clearRect(0,0,$(canvas).width(),$(canvas).height());
+		//背景は白になる
+		c.fillStyle="rgb(255,255,255)";
+		c.fillRect(0,0,$(canvas).width(),$(canvas).height());
+		//c.clearRect(0,0,$(canvas).width(),$(canvas).height());
 	});
 
 
@@ -107,5 +116,14 @@ onload=function(){
 	document.addEventListener("gesturechange",stopDefault,false);
 	//document.addEventListener("gestureend",stopDefault,false);
 
+
+	//画像変換する処理
+	var toImage=document.getElementById("toImage_button");
+	toImage.addEventListener("click",function(){
+		var data=canvas.toDataURL("image/jpeg");
+		var imageContents=document.getElementById("imageContents");
+		imageContents.innerHTML="<img src='"+data+"'>";
+		socket.emit("pushImageFromClient",data);
+	},false);
 
 }

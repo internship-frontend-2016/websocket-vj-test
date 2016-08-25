@@ -61,6 +61,11 @@ module.exports = {
         entries: jsSrc + '/smartphonePaintApp.js',
         build: build + '/js',
         outputName: 'smartphonePaintApp.js'
+      },
+      {
+        entries: jsSrc + '/imagePush.js',
+        build: build + '/js',
+        outputName: 'imagePush.js'
       }
     ]
   },
