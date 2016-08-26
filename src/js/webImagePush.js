@@ -117,15 +117,21 @@ window.onload=function(){
     //create_texture(gl,img_data);
     // カウンタの宣言
     var count = 0;
+    var count2=0;
     // 恒常ループ
     (function loop(){
         // canvasを初期化
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+//        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        var hsv = hsva(count2 % 360, 1, 1, 1);
+        gl.clearColor(hsv[0], hsv[1], hsv[2], hsv[3]);
         gl.clearDepth(1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         
         // カウンタを元にラジアンを算出
         count++;
+        if (count % 10 == 0) {
+            count2++;
+        }
         var rad = (count % 360) * Math.PI / 180;
         
 
