@@ -1,31 +1,17 @@
-
 window.onload=function(){
-    var socket =io();
-    //サーバーからデータを受け取る
-    socket.on("pushImageFromServer",function(data){
-    //    var image = document.getElementById("image");
-        console.log(data);
-        init(data);
-    //    image.src=data;
-    });
-}
-
-function init(img_data){
     // canvasエレメントを取得
     var c = document.getElementById('canvas');
     c.width = 500;
     c.height = 300;
-    
-    console.log("hi");
     // webglコンテキストを取得
     var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
     console.log(gl);
     // 頂点シェーダとフラグメントシェーダの生成
-    var v_shader = create_shader('vs');
-    var f_shader = create_shader('fs');
+    var v_shader = create_shader(gl,'vs');
+    var f_shader = create_shader(gl,'fs');
     
     // プログラムオブジェクトの生成とリンク
-    var prg = create_program(v_shader, f_shader);
+    var prg = create_program(gl,v_shader, f_shader);
     
     // attributeLocationを配列に取得
     var attLocation = new Array();
@@ -70,14 +56,14 @@ function init(img_data){
     ];
     
     // VBOとIBOの生成
-    var vPosition     = create_vbo(position);
-    var vColor        = create_vbo(color);
-    var vTextureCoord = create_vbo(textureCoord);
+    var vPosition     = create_vbo(gl,position);
+    var vColor        = create_vbo(gl,color);
+    var vTextureCoord = create_vbo(gl,textureCoord);
     var VBOList       = [vPosition, vColor, vTextureCoord];
-    var iIndex        = create_ibo(index);
+    var iIndex        = create_ibo(gl,index);
     
     // VBOとIBOの登録
-    set_attribute(VBOList, attLocation, attStride);
+    set_attribute(gl,VBOList, attLocation, attStride);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iIndex);
     
     // uniformLocationを配列に取得
@@ -106,11 +92,29 @@ function init(img_data){
     gl.activeTexture(gl.TEXTURE0);
     
     // テクスチャ用変数の宣言
-    var texture = null;
-    
+    var texture=new Array();
+    //texture[0] = null;
+
+    var posZ=new Array();
+    //テクスチャ呼ばれたら
+    var socket =io();
+
+    //socketのイベントが何回きたかしらべる
+    var getnumber=0;
+    //サーバーからデータを受け取る
+
+    socket.on("pushImageFromServer",function(data){
+    //    var image = document.getElementById("image");
+        create_texture(gl,data,getnumber);
+        posZ[getnumber]=-105;
+        getnumber++;
+        console.log(getnumber);
+        console.log(texture);
+    });
+
     // テクスチャを生成
-//    create_texture("../img/test.jpg");
-    create_texture(img_data);
+    //create_texture(gl,"../img/test.jpg",0);
+    //create_texture(gl,img_data);
     // カウンタの宣言
     var count = 0;
     // 恒常ループ
@@ -124,185 +128,210 @@ function init(img_data){
         count++;
         var rad = (count % 360) * Math.PI / 180;
         
-        // テクスチャをバインドする
-        gl.bindTexture(gl.TEXTURE_2D, texture);
+
+       //  // モデル座標変換行列の生成
+       //  m.identity(mMatrix);
+       //  m.rotate(mMatrix, rad, [0, 1, 0], mMatrix);
+       //  m.multiply(tmpMatrix, mMatrix, mvpMatrix);
         
-        // uniform変数にテクスチャを登録
-        gl.uniform1i(uniLocation[1], 0);
+       //  // テクスチャをバインドする
+       //  gl.bindTexture(gl.TEXTURE_2D, texture[0]);
         
-        // モデル座標変換行列の生成
-        m.identity(mMatrix);
-        m.rotate(mMatrix, rad, [0, 1, 0], mMatrix);
-        m.multiply(tmpMatrix, mMatrix, mvpMatrix);
-        
-        // uniform変数の登録と描画
-        gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
-        gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0);
-        
+       //  // uniform変数にテクスチャを登録
+       // gl.uniform1i(uniLocation[1], 0);
+
+       //  // uniform変数の登録と描画
+       //  gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
+       //  gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0);
+       if(texture){
+            for(var i=0;i<texture.length;i++){
+                if(posZ[i]==7){
+                    texture.shift();
+                    posZ.shift();
+                }
+            }
+           for(var i=0;i<texture.length;i++){
+            posZ[i]+=0.5;
+            bindPlatePoly(gl,m,mMatrix,rad,tmpMatrix,mvpMatrix,uniLocation,index,i,posZ[i]);
+           }
+       }
         // コンテキストの再描画
         gl.flush();
-        
+
         // ループのために再帰呼び出し
         //setTimeout(loop, 1000 / 30);
         requestAnimationFrame(loop);
     })();
-    
-    // シェーダを生成する関数
-    function create_shader(id){
-        // シェーダを格納する変数
-        var shader;
+
+    function bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_uniLocation,_index,_number,_posZ){
+        // モデル座標変換行列の生成
+        _m.identity(_mMatrix);
+        _m.translate(_mMatrix,[0,0,_posZ],_mMatrix);
+        _m.rotate(_mMatrix, _rad, [0, 1, 0], _mMatrix);
+        _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
         
-        // HTMLからscriptタグへの参照を取得
-        var scriptElement = document.getElementById(id);
+        // テクスチャをバインドする
+        _gl.bindTexture(_gl.TEXTURE_2D, texture[_number]);
         
-        // scriptタグが存在しない場合は抜ける
-        if(!scriptElement){return;}
+        // uniform変数にテクスチャを登録
+       _gl.uniform1i(_uniLocation[1], 0);
+
+        // uniform変数の登録と描画
+        _gl.uniformMatrix4fv(_uniLocation[0], false, _mvpMatrix);
+        _gl.drawElements(_gl.TRIANGLES, _index.length, _gl.UNSIGNED_SHORT, 0);
         
-        // scriptタグのtype属性をチェック
-        switch(scriptElement.type){
-            
-            // 頂点シェーダの場合
-            case 'x-shader/x-vertex':
-                shader = gl.createShader(gl.VERTEX_SHADER);
-                break;
-                
-            // フラグメントシェーダの場合
-            case 'x-shader/x-fragment':
-                shader = gl.createShader(gl.FRAGMENT_SHADER);
-                break;
-            default :
-                return;
-        }
-        
-        // 生成されたシェーダにソースを割り当てる
-        gl.shaderSource(shader, scriptElement.text);
-        
-        // シェーダをコンパイルする
-        gl.compileShader(shader);
-        
-        // シェーダが正しくコンパイルされたかチェック
-        if(gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
-            
-            // 成功していたらシェーダを返して終了
-            return shader;
-        }else{
-            
-            // 失敗していたらエラーログをアラートする
-            alert(gl.getShaderInfoLog(shader));
-        }
     }
-    
-    // プログラムオブジェクトを生成しシェーダをリンクする関数
-    function create_program(vs, fs){
-        // プログラムオブジェクトの生成
-        var program = gl.createProgram();
-        
-        // プログラムオブジェクトにシェーダを割り当てる
-        gl.attachShader(program, vs);
-        gl.attachShader(program, fs);
-        
-        // シェーダをリンク
-        gl.linkProgram(program);
-        
-        // シェーダのリンクが正しく行なわれたかチェック
-        if(gl.getProgramParameter(program, gl.LINK_STATUS)){
-        
-            // 成功していたらプログラムオブジェクトを有効にする
-            gl.useProgram(program);
-            
-            // プログラムオブジェクトを返して終了
-            return program;
-        }else{
-            
-            // 失敗していたらエラーログをアラートする
-            alert(gl.getProgramInfoLog(program));
-        }
-    }
-    
-    // VBOを生成する関数
-    function create_vbo(data){
-        // バッファオブジェクトの生成
-        var vbo = gl.createBuffer();
-        
-        // バッファをバインドする
-        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-        
-        // バッファにデータをセット
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
-        
-        // バッファのバインドを無効化
-        gl.bindBuffer(gl.ARRAY_BUFFER, null);
-        
-        // 生成した VBO を返して終了
-        return vbo;
-    }
-    
-    // VBOをバインドし登録する関数
-    function set_attribute(vbo, attL, attS){
-        // 引数として受け取った配列を処理する
-        for(var i in vbo){
-            // バッファをバインドする
-            gl.bindBuffer(gl.ARRAY_BUFFER, vbo[i]);
-            
-            // attributeLocationを有効にする
-            gl.enableVertexAttribArray(attL[i]);
-            
-            // attributeLocationを通知し登録する
-            gl.vertexAttribPointer(attL[i], attS[i], gl.FLOAT, false, 0, 0);
-        }
-    }
-    
-    // IBOを生成する関数
-    function create_ibo(data){
-        // バッファオブジェクトの生成
-        var ibo = gl.createBuffer();
-        
-        // バッファをバインドする
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
-        
-        // バッファにデータをセット
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int16Array(data), gl.STATIC_DRAW);
-        
-        // バッファのバインドを無効化
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-        
-        // 生成したIBOを返して終了
-        return ibo;
-    }
-    
     // テクスチャを生成する関数
-    function create_texture(source){
+    function create_texture(_gl,_source,_n){
         // イメージオブジェクトの生成
         var img = new Image();
         
         // データのオンロードをトリガーにする
         img.onload = function(){
             // テクスチャオブジェクトの生成
-            var tex = gl.createTexture();
+            var tex = _gl.createTexture();
             
             // テクスチャをバインドする
-            gl.bindTexture(gl.TEXTURE_2D, tex);
+            _gl.bindTexture(_gl.TEXTURE_2D, tex);
             
             // テクスチャへイメージを適用
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-
+            _gl.texImage2D(_gl.TEXTURE_2D, 0, _gl.RGBA, _gl.RGBA, _gl.UNSIGNED_BYTE, img);
+            _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_MAG_FILTER,_gl.LINEAR);
+            _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_MIN_FILTER,_gl.LINEAR);
+            _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_WRAP_S,_gl.CLAMP_TO_EDGE);
+            _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_WRAP_T,_gl.CLAMP_TO_EDGE);
 
             // ミップマップを生成
-            gl.generateMipmap(gl.TEXTURE_2D);
+            _gl.generateMipmap(_gl.TEXTURE_2D);
             
             // テクスチャのバインドを無効化
-            gl.bindTexture(gl.TEXTURE_2D, null);
+            _gl.bindTexture(_gl.TEXTURE_2D, null);
             
             // 生成したテクスチャをグローバル変数に代入
-            texture = tex;
+            texture[_n] = tex;
         };
         
         // イメージオブジェクトのソースを指定
-        img.src = source;
+        img.src = _source;
     }
     
 };
+
+// シェーダを生成する関数
+function create_shader(_gl,_id){
+    // シェーダを格納する変数
+    var shader;
+    
+    // HTMLからscriptタグへの参照を取得
+    var scriptElement = document.getElementById(_id);
+    
+    // scriptタグが存在しない場合は抜ける
+    if(!scriptElement){return;}
+    
+    // scriptタグのtype属性をチェック
+    switch(scriptElement.type){
+        
+        // 頂点シェーダの場合
+        case 'x-shader/x-vertex':
+            shader = _gl.createShader(_gl.VERTEX_SHADER);
+            break;
+            
+        // フラグメントシェーダの場合
+        case 'x-shader/x-fragment':
+            shader = _gl.createShader(_gl.FRAGMENT_SHADER);
+            break;
+        default :
+            return;
+    }
+    
+    // 生成されたシェーダにソースを割り当てる
+    _gl.shaderSource(shader, scriptElement.text);
+    
+    // シェーダをコンパイルする
+    _gl.compileShader(shader);
+    
+    // シェーダが正しくコンパイルされたかチェック
+    if(_gl.getShaderParameter(shader, _gl.COMPILE_STATUS)){
+        
+        // 成功していたらシェーダを返して終了
+        return shader;
+    }else{
+        
+        // 失敗していたらエラーログをアラートする
+        alert(_gl.getShaderInfoLog(shader));
+    }
+}
+// プログラムオブジェクトを生成しシェーダをリンクする関数
+function create_program(_gl,_vs, _fs){
+    // プログラムオブジェクトの生成
+    var program = _gl.createProgram();
+    
+    // プログラムオブジェクトにシェーダを割り当てる
+    _gl.attachShader(program, _vs);
+    _gl.attachShader(program, _fs);
+    
+    // シェーダをリンク
+    _gl.linkProgram(program);
+    
+    // シェーダのリンクが正しく行なわれたかチェック
+    if(_gl.getProgramParameter(program, _gl.LINK_STATUS)){
+    
+        // 成功していたらプログラムオブジェクトを有効にする
+        _gl.useProgram(program);
+        
+        // プログラムオブジェクトを返して終了
+        return program;
+    }else{
+        
+        // 失敗していたらエラーログをアラートする
+        alert(_gl.getProgramInfoLog(program));
+    }
+}
+// VBOを生成する関数
+function create_vbo(_gl,_data){
+    // バッファオブジェクトの生成
+    var vbo = _gl.createBuffer();
+    
+    // バッファをバインドする
+    _gl.bindBuffer(_gl.ARRAY_BUFFER, vbo);
+    
+    // バッファにデータをセット
+    _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(_data), _gl.STATIC_DRAW);
+    
+    // バッファのバインドを無効化
+    _gl.bindBuffer(_gl.ARRAY_BUFFER, null);
+    
+    // 生成した VBO を返して終了
+    return vbo;
+}
+// VBOをバインドし登録する関数
+function set_attribute(_gl,_vbo, _attL, _attS){
+    // 引数として受け取った配列を処理する
+    for(var i in _vbo){
+        // バッファをバインドする
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, _vbo[i]);
+        
+        // attributeLocationを有効にする
+        _gl.enableVertexAttribArray(_attL[i]);
+        
+        // attributeLocationを通知し登録する
+        _gl.vertexAttribPointer(_attL[i], _attS[i], _gl.FLOAT, false, 0, 0);
+    }
+}
+// IBOを生成する関数
+function create_ibo(_gl,_data){
+    // バッファオブジェクトの生成
+    var ibo = _gl.createBuffer();
+    
+    // バッファをバインドする
+    _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, ibo);
+    
+    // バッファにデータをセット
+    _gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, new Int16Array(_data), _gl.STATIC_DRAW);
+    
+    // バッファのバインドを無効化
+    _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, null);
+    
+    // 生成したIBOを返して終了
+    return ibo;
+}
