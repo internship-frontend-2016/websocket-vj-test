@@ -52,14 +52,14 @@ window.onload=function(){
 		}
 	},false);
 	//色と線の太さを設定する
-	Color("black",c);
-	Color("blue",c);
-	Color("red",c);
-	Color("green",c);
+	setEventButtonColor("black",c);
+	setEventButtonColor("blue",c);
+	setEventButtonColor("red",c);
+	setEventButtonColor("green",c);
 
-	lineStrokeWidth("small",c);
-	lineStrokeWidth("middle",c);
-	lineStrokeWidth("large",c);
+	setEventLineWidth("small",c);
+	setEventLineWidth("middle",c);
+	setEventLineWidth("large",c);
 
 	document.getElementById("delete_button").addEventListener("click",function(){
 		//背景は白になる
@@ -96,7 +96,7 @@ function getPosT(_e,_canvas){
 	var mouseY=_e.touches[0].clientY-$(_canvas).position().top+scrollY();
 	return {x:mouseX,y:mouseY};
 }
-function Color(_id,_c){
+function setEventButtonColor(_id,_c){
 	console.log(_id);
 	document.getElementById(_id).addEventListener("click",function(){
 		console.log(_id);
@@ -104,7 +104,7 @@ function Color(_id,_c){
 	},false);
 }
 
-function lineStrokeWidth(_id,_c){
+function setEventLineWidth(_id,_c){
 	document.getElementById(_id).addEventListener("touchend",function(){
 		console.log(_id+"_touchend");
 		var strokewidth;
