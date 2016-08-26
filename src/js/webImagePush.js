@@ -154,10 +154,15 @@ window.onload=function(){
                 if(posZ[i]==7){
                     texture.shift();
                     posZ.shift();
+                    getnumber--;
+                    console.log(texture);
+                    /*
+カメラより前にすすんだら、配列を減らす処理が微妙
+                    */
                 }
             }
            for(var i=0;i<texture.length;i++){
-            posZ[i]+=0.5;
+            posZ[i]+=0.25;
             bindPlatePoly(gl,m,mMatrix,rad,tmpMatrix,mvpMatrix,uniLocation,index,i,posZ[i]);
            }
        }
