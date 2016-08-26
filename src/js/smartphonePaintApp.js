@@ -65,43 +65,88 @@ window.onload=function(){
 	}
 
 	//色と線の太さを設定する関数
-	$("#black").on("click",function(){
-		c.strokeStyle="black";		
+	Color("black");
+	Color("blue");
+	Color("red");
+	Color("green");
+	/*
+	$("#small").on("touchend",function(){
+		console.log("small_jquery");
 	});
-	$("#blue").on("click",function(){
-		c.strokeStyle="blue";		
-	});
-	$("#red").on("click",function(){
-		c.strokeStyle="red";		
-	});
-	$("#green").on("click",function(){
-		c.strokeStyle="green";		
-	});
-	$("#small").on("click",function(){
-		c.lineWidth=5;		
-	});
-	$("#middle").on("click",function(){
-		c.lineWidth=10;		
-	});
-	$("#large").on("click",function(){
-		c.lineWidth=20;		
-	});
+*/
+	lineStrokeWidth("small");
+	lineStrokeWidth("middle");
+	lineStrokeWidth("large");
 
-	$("#delete_button").on("click",function(){
+	document.getElementById("delete_button").addEventListener("click",function(){
 		//背景は白になる
 		c.fillStyle="rgb(255,255,255)";
 		c.fillRect(0,0,$(canvas).width(),$(canvas).height());
-		//c.clearRect(0,0,$(canvas).width(),$(canvas).height());
-	});
+		//c.clearRect(0,0,$(canvas).width(),$(canvas).height());		
+	},false);
 
+	function Color(id){
+		console.log(id);
+		document.getElementById(id).addEventListener("click",function(){
+			console.log(id);
+			c.strokeStyle=id;
+		},false);
+	}
+
+	function lineStrokeWidth(id){
+		document.getElementById(id).addEventListener("touchend",function(){
+			console.log(id+"_touchend");
+			var strokewidth;
+			switch(id){
+				case "small":
+					strokewidth=5;
+					break;
+				case "middle":
+					strokewidth=10;
+					break;
+				case "large":
+					strokewidth=20;
+					break;
+				default:
+					break;
+			}
+			console.log(strokewidth);
+			c.lineWidth=strokewidth;
+		},false);
+
+		document.getElementById(id).addEventListener("click",function(){
+			console.log(id+"_click");
+			var strokewidth;
+			switch(id){
+				case "small":
+					strokewidth=5;
+					break;
+				case "middle":
+					strokewidth=10;
+					break;
+				case "large":
+					strokewidth=20;
+					break;
+				default:
+					break;
+			}
+			console.log(strokewidth);
+			c.lineWidth=strokewidth;
+		},false);
+
+	}
+
+	//クリックされたかの確認
+	var a=function(){
+		console.log("clickきたよ");
+	}
 
 	//ブラウザのデフォルト動作を禁止する
-
 	function stopDefault(e){
 		//if(e.touches[0].target.tagName.toLowerCase()=="li"){
-			console.log(e.touches[0].target);
+			//console.log(e.touches[0].target);
 		if(e.touches[0].target.tagName.toLowerCase() == "li"){
-			conosole.log(e.touches[0].target.tagName.toLowerCase());
+			//console.log(e.touches[0].target.tagName.toLowerCase());
 			return;
 		}
 		if(e.touches[0].target.tagName.toLowerCase()=="input"){

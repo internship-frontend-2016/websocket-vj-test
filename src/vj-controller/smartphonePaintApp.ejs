@@ -11,7 +11,7 @@
 	<title>スマフォ用お絵かきアプリ</title>
 </head>
 <body>
-
+<div touchstart="javascript:console.log('bbbb')">aaaa</div>
  <div class="main">
 	<div class="toolbar">
 		<ul>
@@ -19,9 +19,18 @@
 			<li id="blue"></li>
 			<li id="red"></li>
 			<li id="green"></li>
-			<li id="small"><p class="circle circle_small"></p></li>
-			<li id="middle"><p class="circle circle_middle"></p></li>
-			<li id="large"><p class="circle circle_large"></p></li>
+			<li class="small">
+				<p class="circle circle_small"></p>
+				<div id="small"></div>
+			</li>
+			<li class="middle">
+				<p class="circle circle_middle"></p>
+				<div id="middle"></div>
+			</li>
+			<li class="large">
+				<p class="circle circle_large"></p>
+				<div id="large"></div>
+			</li>
 
 		</ul>
 	</div>
