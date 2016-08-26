@@ -1,16 +1,4 @@
-
 window.onload=function(){
-    var socket =io();
-    //サーバーからデータを受け取る
-    socket.on("pushImageFromServer",function(data){
-    //    var image = document.getElementById("image");
-        console.log(data);
-        init(data);
-    //    image.src=data;
-    });
-}
-
-function init(img_data){
     // canvasエレメントを取得
     var c = document.getElementById('canvas');
     c.width = 500;
@@ -94,7 +82,7 @@ function init(img_data){
     var mvpMatrix = m.identity(m.create());
     
     // ビュー×プロジェクション座標変換行列
-    m.lookAt([0.0, 2.0, 5.0], [0, 0, 0], [0, 1, 0], vMatrix);
+    m.lookAt([0.0, 0.0, 5.0], [0, 0, 0], [0, 1, 0], vMatrix);
     m.perspective(45, c.width / c.height, 0.1, 100, pMatrix);
     m.multiply(pMatrix, vMatrix, tmpMatrix);
     
@@ -109,10 +97,13 @@ function init(img_data){
     var texture = null;
     
     // テクスチャを生成
-//    create_texture("../img/test.jpg");
-    create_texture(img_data);
+    create_texture("../img/test.jpg");
+    //create_texture(img_data);
     // カウンタの宣言
     var count = 0;
+    var speed=-105;
+
+    
     // 恒常ループ
     (function loop(){
         // canvasを初期化
@@ -121,21 +112,42 @@ function init(img_data){
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         
         // カウンタを元にラジアンを算出
+        //console.log(speed);
+        if(speed==7){speed=-105;}
+        speed+=0.5;
         count++;
         var rad = (count % 360) * Math.PI / 180;
         
+        // モデル座標変換行列の生成
+        m.identity(mMatrix);
+        m.translate(mMatrix,[0,0,speed],mMatrix);
+        m.rotate(mMatrix, rad, [0, 1, 0], mMatrix);
+        m.multiply(tmpMatrix, mMatrix, mvpMatrix);
+        
+        // uniform変数の登録と描画
+
         // テクスチャをバインドする
         gl.bindTexture(gl.TEXTURE_2D, texture);
         
         // uniform変数にテクスチャを登録
         gl.uniform1i(uniLocation[1], 0);
         
-        // モデル座標変換行列の生成
+        gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
+        gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0);
+
         m.identity(mMatrix);
+        m.translate(mMatrix,[0,0,speed+100],mMatrix);
         m.rotate(mMatrix, rad, [0, 1, 0], mMatrix);
         m.multiply(tmpMatrix, mMatrix, mvpMatrix);
         
         // uniform変数の登録と描画
+
+        // テクスチャをバインドする
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        
+        // uniform変数にテクスチャを登録
+        gl.uniform1i(uniLocation[1], 0);
+        
         gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
         gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0);
         

@@ -82,7 +82,7 @@ body{
 	*/
 	width:320px;
 	height:320px;
-	box-sizing: border-box;
+
 	border:2px solid #ccc;
 	
 }
@@ -91,8 +91,10 @@ body{
 	canvas{
 		width:316px;
 		height:316px;
+/*
 		box-sizing: border-box;
 		border:2px solid #ccc;
+*/
 	}
 }
 /*削除ボタンのCSS*/

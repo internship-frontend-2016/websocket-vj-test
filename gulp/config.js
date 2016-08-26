@@ -71,6 +71,11 @@ module.exports = {
         entries: jsSrc + '/webImagePush.js',
         build: build + '/js',
         outputName: 'webImagePush.js'
+      },
+      {
+        entries: jsSrc + '/webglTest.js',
+        build: build + '/js',
+        outputName: 'webglTest.js'
       }
     ]
   },

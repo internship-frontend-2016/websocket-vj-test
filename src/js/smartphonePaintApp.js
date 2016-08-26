@@ -1,4 +1,4 @@
-onload=function(){
+window.onload=function(){
 	var socket=io();
 	var canvas=document.getElementById("myCanvas");
 	var c=canvas.getContext("2d");
@@ -18,7 +18,7 @@ onload=function(){
 	c.fillStyle="rgb(255,255,255)";
 	c.fillRect(0,0,$(canvas).width(),$(canvas).height());
 
-	c.strokeStyle="#000000";
+	c.strokeStyle="black";
 	c.lineWidth=5;
 	c.lineJoin="round";
 	c.lineCap="round";
