@@ -2,10 +2,7 @@ window.onload=function(){
 	var socket=io();
 	var canvas=document.getElementById("myCanvas");
 	var c=canvas.getContext("2d");
-/*
-	var w=640;
-	var h=640;
-*/
+
 	var w=316;
 	var h=316;
 	var drawing=false;
@@ -26,7 +23,7 @@ window.onload=function(){
 	//タップ開始時に、絵を描く準備をする
 	canvas.addEventListener("touchstart",function(e){
 		drawing=true;
-		oldPos=getPosT(e);
+		oldPos=getPosT(e,canvas);
 	},false);
 
 	//タップ終了時に、絵を描く後処理を行う
@@ -44,7 +41,7 @@ window.onload=function(){
 	//実際に絵を書く処理
 	//前回保存した位置から現在の位置に線を引く
 	canvas.addEventListener("touchmove",function(e){
-	var pos = getPosT(e);
+	var pos = getPosT(e,canvas);
 		if(drawing){
 			c.beginPath();
 			c.moveTo(oldPos.x,oldPos.y);
@@ -54,29 +51,15 @@ window.onload=function(){
 			oldPos=pos;
 		}
 	},false);
+	//色と線の太さを設定する
+	Color("black",c);
+	Color("blue",c);
+	Color("red",c);
+	Color("green",c);
 
-	//タップ関連関数
-	function scrollX(){return document.documentElement.scrollLeft||document.body.scrollLeft;}
-	function scrollY(){return document.documentElement.scrollTop||document.body.scrollTop;}
-	function getPosT(_e){
-		var mouseX=_e.touches[0].clientX-$(canvas).position().left+scrollX();
-		var mouseY=_e.touches[0].clientY-$(canvas).position().top+scrollY();
-		return {x:mouseX,y:mouseY};
-	}
-
-	//色と線の太さを設定する関数
-	Color("black");
-	Color("blue");
-	Color("red");
-	Color("green");
-	/*
-	$("#small").on("touchend",function(){
-		console.log("small_jquery");
-	});
-*/
-	lineStrokeWidth("small");
-	lineStrokeWidth("middle");
-	lineStrokeWidth("large");
+	lineStrokeWidth("small",c);
+	lineStrokeWidth("middle",c);
+	lineStrokeWidth("large",c);
 
 	document.getElementById("delete_button").addEventListener("click",function(){
 		//背景は白になる
@@ -84,77 +67,6 @@ window.onload=function(){
 		c.fillRect(0,0,$(canvas).width(),$(canvas).height());
 		//c.clearRect(0,0,$(canvas).width(),$(canvas).height());		
 	},false);
-
-	function Color(id){
-		console.log(id);
-		document.getElementById(id).addEventListener("click",function(){
-			console.log(id);
-			c.strokeStyle=id;
-		},false);
-	}
-
-	function lineStrokeWidth(id){
-		document.getElementById(id).addEventListener("touchend",function(){
-			console.log(id+"_touchend");
-			var strokewidth;
-			switch(id){
-				case "small":
-					strokewidth=5;
-					break;
-				case "middle":
-					strokewidth=10;
-					break;
-				case "large":
-					strokewidth=20;
-					break;
-				default:
-					break;
-			}
-			console.log(strokewidth);
-			c.lineWidth=strokewidth;
-		},false);
-
-		document.getElementById(id).addEventListener("click",function(){
-			console.log(id+"_click");
-			var strokewidth;
-			switch(id){
-				case "small":
-					strokewidth=5;
-					break;
-				case "middle":
-					strokewidth=10;
-					break;
-				case "large":
-					strokewidth=20;
-					break;
-				default:
-					break;
-			}
-			console.log(strokewidth);
-			c.lineWidth=strokewidth;
-		},false);
-
-	}
-
-	//クリックされたかの確認
-	var a=function(){
-		console.log("clickきたよ");
-	}
-
-	//ブラウザのデフォルト動作を禁止する
-	function stopDefault(e){
-		//if(e.touches[0].target.tagName.toLowerCase()=="li"){
-			//console.log(e.touches[0].target);
-		if(e.touches[0].target.tagName.toLowerCase() == "li"){
-			//console.log(e.touches[0].target.tagName.toLowerCase());
-			return;
-		}
-		if(e.touches[0].target.tagName.toLowerCase()=="input"){
-			return;
-		}
-		e.preventDefault();
-	}
-
 
 	//ドキュメントのタッチイベントの初期化
 	document.addEventListener("touchstart",stopDefault,false);
@@ -174,5 +86,76 @@ window.onload=function(){
 		imageContents.innerHTML="<img src='"+data+"'>";
 		socket.emit("pushImageFromClient",data);
 	},false);
+}
 
+//タップ関連関数
+function scrollX(){return document.documentElement.scrollLeft||document.body.scrollLeft;}
+function scrollY(){return document.documentElement.scrollTop||document.body.scrollTop;}
+function getPosT(_e,_canvas){
+	var mouseX=_e.touches[0].clientX-$(_canvas).position().left+scrollX();
+	var mouseY=_e.touches[0].clientY-$(_canvas).position().top+scrollY();
+	return {x:mouseX,y:mouseY};
+}
+function Color(_id,_c){
+	console.log(_id);
+	document.getElementById(_id).addEventListener("click",function(){
+		console.log(_id);
+		_c.strokeStyle=_id;
+	},false);
+}
+
+function lineStrokeWidth(_id,_c){
+	document.getElementById(_id).addEventListener("touchend",function(){
+		console.log(_id+"_touchend");
+		var strokewidth;
+		switch(_id){
+			case "small":
+				strokewidth=5;
+				break;
+			case "middle":
+				strokewidth=10;
+				break;
+			case "large":
+				strokewidth=20;
+				break;
+			default:
+				break;
+		}
+		console.log(strokewidth);
+		_c.lineWidth=strokewidth;
+	},false);
+
+	document.getElementById(_id).addEventListener("click",function(){
+		console.log(_id+"_click");
+		var strokewidth;
+		switch(_id){
+			case "small":
+				strokewidth=5;
+				break;
+			case "middle":
+				strokewidth=10;
+				break;
+			case "large":
+				strokewidth=20;
+				break;
+			default:
+				break;
+		}
+		console.log(strokewidth);
+		_c.lineWidth=strokewidth;
+	},false);
+}
+
+//ブラウザのデフォルト動作を禁止する
+function stopDefault(e){
+	//if(e.touches[0].target.tagName.toLowerCase()=="li"){
+		//console.log(e.touches[0].target);
+	if(e.touches[0].target.tagName.toLowerCase() == "li"){
+		//console.log(e.touches[0].target.tagName.toLowerCase());
+		return;
+	}
+	if(e.touches[0].target.tagName.toLowerCase()=="input"){
+		return;
+	}
+	e.preventDefault();
 }
