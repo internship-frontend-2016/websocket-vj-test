@@ -352,7 +352,7 @@ function set_attribute(_gl,_vbo, _attL, _attS){
         _gl.vertexAttribPointer(_attL[i], _attS[i], _gl.FLOAT, false, 0, 0);
     }
 }
-    // フレームバッファをオブジェクトとして生成する関数
+// フレームバッファをオブジェクトとして生成する関数
 function create_framebuffer(_gl,_width, _height){
     // フレームバッファの生成
     var frameBuffer = _gl.createFramebuffer();
