@@ -162,6 +162,8 @@ window.onload=function(){
     var count2=0;
     mx=0.5;my=0.5;
     var startTime=new Date().getTime();
+    //
+    gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
     // 恒常ループ
     (function loop(){
         var time=(new Date().getTime() - startTime)*0.001;
@@ -173,6 +175,8 @@ window.onload=function(){
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         gl.useProgram(tprg);
+        // ブレンディングを無効にする
+        gl.disable(gl.BLEND);
         //attributeの登録
         gl.bindBuffer(gl.ARRAY_BUFFER,tvPosition);
         gl.enableVertexAttribArray(tvAttLocation);
@@ -187,15 +191,13 @@ window.onload=function(){
     //  gl.flush();
         gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 
-
-
         // canvasを初期化
 //        gl.clearColor(0.0, 0.0, 0.0, 1.0);
         var hsv = hsva(count2 % 360, 1, 1, 1);
         gl.clearColor(hsv[0], hsv[1], hsv[2], hsv[3]);
         gl.clearDepth(1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        
+
         // カウンタを元にラジアンを算出
         count++;
         if (count % 10 == 0) {
@@ -204,6 +206,8 @@ window.onload=function(){
         var rad = (count % 360) * Math.PI / 180;
 
         gl.useProgram(prg);
+        // ブレンディングを無効にする
+        gl.disable(gl.BLEND);
         // VBOとIBOの登録
         set_attribute(gl,VBOList, attLocation, attStride);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iIndex);
@@ -218,21 +222,8 @@ window.onload=function(){
         gl.uniform1i(uniLocation[1], 0);
         gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
-
-       //  // モデル座標変換行列の生成
-       //  m.identity(mMatrix);
-       //  m.rotate(mMatrix, rad, [0, 1, 0], mMatrix);
-       //  m.multiply(tmpMatrix, mMatrix, mvpMatrix);
-        
-       //  // テクスチャをバインドする
-       //  gl.bindTexture(gl.TEXTURE_2D, texture[0]);
-        
-       //  // uniform変数にテクスチャを登録
-       // gl.uniform1i(uniLocation[1], 0);
-
-       //  // uniform変数の登録と描画
-       //  gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
-       //  gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0);
+        // ブレンディングを有効にする
+        gl.enable(gl.BLEND);
        if(texture){
             for(var i=0;i<texture.length;i++){
                 if(posZ[i]==7){
