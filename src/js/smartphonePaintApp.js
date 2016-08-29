@@ -105,26 +105,6 @@ function setEventButtonColor(_id,_c){
 }
 
 function setEventLineWidth(_id,_c){
-	document.getElementById(_id).addEventListener("touchend",function(){
-		console.log(_id+"_touchend");
-		var strokewidth;
-		switch(_id){
-			case "small":
-				strokewidth=5;
-				break;
-			case "middle":
-				strokewidth=10;
-				break;
-			case "large":
-				strokewidth=20;
-				break;
-			default:
-				break;
-		}
-		console.log(strokewidth);
-		_c.lineWidth=strokewidth;
-	},false);
-
 	document.getElementById(_id).addEventListener("click",function(){
 		console.log(_id+"_click");
 		var strokewidth;
@@ -152,6 +132,9 @@ function stopDefault(e){
 		//console.log(e.touches[0].target);
 	if(e.touches[0].target.tagName.toLowerCase() == "li"){
 		//console.log(e.touches[0].target.tagName.toLowerCase());
+		return;
+	}
+	if(e.touches[0].target.tagName.toLowerCase()=="div"){
 		return;
 	}
 	if(e.touches[0].target.tagName.toLowerCase()=="input"){

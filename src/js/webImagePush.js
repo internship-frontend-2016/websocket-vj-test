@@ -171,6 +171,7 @@ window.onload=function(){
 
         // ループのために再帰呼び出し
         //setTimeout(loop, 1000 / 30);
+        //タブが非アクティブの場合はFPSを落とす
         requestAnimationFrame(loop);
     })();
 

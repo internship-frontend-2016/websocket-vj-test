@@ -76,6 +76,11 @@ module.exports = {
         entries: jsSrc + '/webglTest.js',
         build: build + '/js',
         outputName: 'webglTest.js'
+      },
+      {
+        entries: jsSrc + '/shaderTest.js',
+        build: build + '/js',
+        outputName: 'shaderTest.js'
       }
     ]
   },
