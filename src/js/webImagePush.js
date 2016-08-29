@@ -1,15 +1,53 @@
+// テクスチャ用変数の宣言
+var texture=new Array();
+var mx,my,cw,ch;
+window.resize=function(){
+    cw=window.innerWidth;
+    ch=window.innerHeight;
+}
 window.onload=function(){
     // canvasエレメントを取得
     var c = document.getElementById('canvas');
-    c.width = 500;
-    c.height = 300;
+    cw=window.innerWidth;
+    ch=window.innerHeight;
+    c.width = cw;
+    c.height = ch;
+
+    //canvas上でマウスが動いたら
+    c.addEventListener("mousemove",mouseMove,true);
     // webglコンテキストを取得
     var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-    console.log(gl);
+    //console.log(gl);
+
+    /*--背景側--*/
+    var tprg=create_program(gl,create_shader(gl,"tvs"),create_shader(gl,"tfs"));
+    // run=(tprg!=null);
+    // if(!run){
+    //     eCheck.checked=false;
+    // }
+    var tUniLocation=new Array();
+    tUniLocation[0]=gl.getUniformLocation(tprg,"time");
+    tUniLocation[1]=gl.getUniformLocation(tprg,"mouse");
+    tUniLocation[2]=gl.getUniformLocation(tprg,"iResolution");
+
+    var tPosition=[
+    -1.0,1.0,0.0,
+    1.0,1.0,0.0,
+    -1.0,-1.0,0.0,
+    1.0,-1.0,0.0,
+    ]
+    var tIndex=[
+    0,2,1,
+    1,2,3
+    ]
+    var tvPosition=create_vbo(gl,tPosition);
+    var tvIndex=create_ibo(gl,tIndex);
+    var tvAttLocation=gl.getAttribLocation(tprg,"position");
+
+/*--------------------------------------------------------------------------*/
     // 頂点シェーダとフラグメントシェーダの生成
     var v_shader = create_shader(gl,'vs');
     var f_shader = create_shader(gl,'fs');
-    
     // プログラムオブジェクトの生成とリンク
     var prg = create_program(gl,v_shader, f_shader);
     
@@ -62,9 +100,9 @@ window.onload=function(){
     var VBOList       = [vPosition, vColor, vTextureCoord];
     var iIndex        = create_ibo(gl,index);
     
-    // VBOとIBOの登録
-    set_attribute(gl,VBOList, attLocation, attStride);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iIndex);
+    // // VBOとIBOの登録
+    // set_attribute(gl,VBOList, attLocation, attStride);
+    // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iIndex);
     
     // uniformLocationを配列に取得
     var uniLocation = new Array();
@@ -80,7 +118,7 @@ window.onload=function(){
     var mvpMatrix = m.identity(m.create());
     
     // ビュー×プロジェクション座標変換行列
-    m.lookAt([0.0, 2.0, 5.0], [0, 0, 0], [0, 1, 0], vMatrix);
+    m.lookAt([0.0, 0.0, 5.0], [0, 0, 0], [0, 1, 0], vMatrix);
     m.perspective(45, c.width / c.height, 0.1, 100, pMatrix);
     m.multiply(pMatrix, vMatrix, tmpMatrix);
     
@@ -91,8 +129,8 @@ window.onload=function(){
     // 有効にするテクスチャユニットを指定
     gl.activeTexture(gl.TEXTURE0);
     
-    // テクスチャ用変数の宣言
-    var texture=new Array();
+    // // テクスチャ用変数の宣言
+    // var texture=new Array();
     //texture[0] = null;
 
     var posZ=new Array();
@@ -115,11 +153,42 @@ window.onload=function(){
     // テクスチャを生成
     //create_texture(gl,"../img/test.jpg",0);
     //create_texture(gl,img_data);
+    // フレームバッファオブジェクトの取得
+    var fBufferWidth  = cw;
+    var fBufferHeight = ch;
+    var fBuffer = create_framebuffer(gl,fBufferWidth, fBufferHeight);
     // カウンタの宣言
     var count = 0;
     var count2=0;
+    mx=0.5;my=0.5;
+    var startTime=new Date().getTime();
     // 恒常ループ
     (function loop(){
+        var time=(new Date().getTime() - startTime)*0.001;
+        /*--フレームバッファをバインド--*/
+        gl.bindFramebuffer(gl.FRAMEBUFFER,fBuffer.f);
+        gl.clearColor(0.0,0.0,0.0,1.0);
+    //    gl.clearDepth(1.0);
+    //    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        gl.useProgram(tprg);
+        //attributeの登録
+        gl.bindBuffer(gl.ARRAY_BUFFER,tvPosition);
+        gl.enableVertexAttribArray(tvAttLocation);
+        gl.vertexAttribPointer(tvAttLocation,3,gl.FLOAT,false,0,0);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,tvIndex);
+
+    //  console.log(time+tempTime);
+        gl.uniform1f(tUniLocation[0],time);
+        gl.uniform2fv(tUniLocation[1],[mx,my]);
+        gl.uniform2fv(tUniLocation[2],[cw,ch]);
+        gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_SHORT,0);
+    //  gl.flush();
+        gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+
+
+
         // canvasを初期化
 //        gl.clearColor(0.0, 0.0, 0.0, 1.0);
         var hsv = hsva(count2 % 360, 1, 1, 1);
@@ -133,7 +202,22 @@ window.onload=function(){
             count2++;
         }
         var rad = (count % 360) * Math.PI / 180;
-        
+
+        gl.useProgram(prg);
+        // VBOとIBOの登録
+        set_attribute(gl,VBOList, attLocation, attStride);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iIndex);
+/*移動、回転、拡大縮小*/
+        m.identity(mMatrix);
+//        m.rotate(mMatrix, rad, [0, 1, 0], mMatrix);
+        m.translate(mMatrix,[0.0,0.0,-95.0],mMatrix);
+        m.scale(mMatrix,[100.0,70.0,1.0],mMatrix);
+        m.multiply(tmpMatrix, mMatrix, mvpMatrix);
+        //登録
+        gl.bindTexture(gl.TEXTURE_2D,fBuffer.t);
+        gl.uniform1i(uniLocation[1], 0);
+        gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
+        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
 
        //  // モデル座標変換行列の生成
        //  m.identity(mMatrix);
@@ -162,7 +246,7 @@ window.onload=function(){
                 }
             }
            for(var i=0;i<texture.length;i++){
-            posZ[i]+=0.25;
+            posZ[i]+=0.80;
             bindPlatePoly(gl,m,mMatrix,rad,tmpMatrix,mvpMatrix,uniLocation,index,i,posZ[i]);
            }
        }
@@ -175,59 +259,29 @@ window.onload=function(){
         requestAnimationFrame(loop);
     })();
 
-    function bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_uniLocation,_index,_number,_posZ){
-        // モデル座標変換行列の生成
-        _m.identity(_mMatrix);
-        _m.translate(_mMatrix,[0,0,_posZ],_mMatrix);
-        _m.rotate(_mMatrix, _rad, [0, 1, 0], _mMatrix);
-        _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
-        
-        // テクスチャをバインドする
-        _gl.bindTexture(_gl.TEXTURE_2D, texture[_number]);
-        
-        // uniform変数にテクスチャを登録
-       _gl.uniform1i(_uniLocation[1], 0);
-
-        // uniform変数の登録と描画
-        _gl.uniformMatrix4fv(_uniLocation[0], false, _mvpMatrix);
-        _gl.drawElements(_gl.TRIANGLES, _index.length, _gl.UNSIGNED_SHORT, 0);
-        
-    }
-    // テクスチャを生成する関数
-    function create_texture(_gl,_source,_n){
-        // イメージオブジェクトの生成
-        var img = new Image();
-        
-        // データのオンロードをトリガーにする
-        img.onload = function(){
-            // テクスチャオブジェクトの生成
-            var tex = _gl.createTexture();
-            
-            // テクスチャをバインドする
-            _gl.bindTexture(_gl.TEXTURE_2D, tex);
-            
-            // テクスチャへイメージを適用
-            _gl.texImage2D(_gl.TEXTURE_2D, 0, _gl.RGBA, _gl.RGBA, _gl.UNSIGNED_BYTE, img);
-            _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_MAG_FILTER,_gl.LINEAR);
-            _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_MIN_FILTER,_gl.LINEAR);
-            _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_WRAP_S,_gl.CLAMP_TO_EDGE);
-            _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_WRAP_T,_gl.CLAMP_TO_EDGE);
-
-            // ミップマップを生成
-            _gl.generateMipmap(_gl.TEXTURE_2D);
-            
-            // テクスチャのバインドを無効化
-            _gl.bindTexture(_gl.TEXTURE_2D, null);
-            
-            // 生成したテクスチャをグローバル変数に代入
-            texture[_n] = tex;
-        };
-        
-        // イメージオブジェクトのソースを指定
-        img.src = _source;
-    }
-    
 };
+function mouseMove(e){
+    mx=e.offsetX/cw;
+    my=e.offsetY/ch;
+}
+function bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_uniLocation,_index,_number,_posZ){
+    // モデル座標変換行列の生成
+    _m.identity(_mMatrix);
+    _m.translate(_mMatrix,[0,0,_posZ],_mMatrix);
+    _m.rotate(_mMatrix, _rad, [0, 1, 0], _mMatrix);
+    _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
+    
+    // テクスチャをバインドする
+    _gl.bindTexture(_gl.TEXTURE_2D, texture[_number]);
+    
+    // uniform変数にテクスチャを登録
+   _gl.uniform1i(_uniLocation[1], 0);
+
+    // uniform変数の登録と描画
+    _gl.uniformMatrix4fv(_uniLocation[0], false, _mvpMatrix);
+    _gl.drawElements(_gl.TRIANGLES, _index.length, _gl.UNSIGNED_SHORT, 0);
+    
+}
 
 // シェーダを生成する関数
 function create_shader(_gl,_id){
@@ -347,3 +401,82 @@ function create_ibo(_gl,_data){
     // 生成したIBOを返して終了
     return ibo;
 }
+
+// テクスチャを生成する関数
+function create_texture(_gl,_source,_n){
+    // イメージオブジェクトの生成
+    var img = new Image();
+    
+    // データのオンロードをトリガーにする
+    img.onload = function(){
+        // テクスチャオブジェクトの生成
+        var tex = _gl.createTexture();
+        
+        // テクスチャをバインドする
+        _gl.bindTexture(_gl.TEXTURE_2D, tex);
+        
+        // テクスチャへイメージを適用
+        _gl.texImage2D(_gl.TEXTURE_2D, 0, _gl.RGBA, _gl.RGBA, _gl.UNSIGNED_BYTE, img);
+        _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_MAG_FILTER,_gl.LINEAR);
+        _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_MIN_FILTER,_gl.LINEAR);
+        _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_WRAP_S,_gl.CLAMP_TO_EDGE);
+        _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_WRAP_T,_gl.CLAMP_TO_EDGE);
+
+        // ミップマップを生成
+        _gl.generateMipmap(_gl.TEXTURE_2D);
+        
+        // テクスチャのバインドを無効化
+        _gl.bindTexture(_gl.TEXTURE_2D, null);
+        
+        // 生成したテクスチャをグローバル変数に代入
+        texture[_n] = tex;
+    };
+    
+    // イメージオブジェクトのソースを指定
+    img.src = _source;
+}
+// フレームバッファをオブジェクトとして生成する関数
+function create_framebuffer(_gl,_width, _height){
+    // フレームバッファの生成
+    var frameBuffer = _gl.createFramebuffer();
+    
+    // フレームバッファをWebGLにバインド
+    _gl.bindFramebuffer(_gl.FRAMEBUFFER, frameBuffer);
+    
+    // 深度バッファ用レンダーバッファの生成とバインド
+    var depthRenderBuffer = _gl.createRenderbuffer();
+    _gl.bindRenderbuffer(_gl.RENDERBUFFER, depthRenderBuffer);
+    
+    // レンダーバッファを深度バッファとして設定
+    _gl.renderbufferStorage(_gl.RENDERBUFFER, _gl.DEPTH_COMPONENT16, _width, _height);
+    
+    // フレームバッファにレンダーバッファを関連付ける
+    _gl.framebufferRenderbuffer(_gl.FRAMEBUFFER, _gl.DEPTH_ATTACHMENT, _gl.RENDERBUFFER, depthRenderBuffer);
+    
+    // フレームバッファ用テクスチャの生成
+    var fTexture = _gl.createTexture();
+    
+    // フレームバッファ用のテクスチャをバインド
+    _gl.bindTexture(_gl.TEXTURE_2D, fTexture);
+    
+    // フレームバッファ用のテクスチャにカラー用のメモリ領域を確保
+    _gl.texImage2D(_gl.TEXTURE_2D, 0, _gl.RGBA, _width, _height, 0, _gl.RGBA, _gl.UNSIGNED_BYTE, null);
+    
+    // テクスチャパラメータ
+    _gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MAG_FILTER, _gl.LINEAR);
+    _gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_MIN_FILTER, _gl.LINEAR);
+    _gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_WRAP_S, _gl.CLAMP_TO_EDGE);
+    _gl.texParameteri(_gl.TEXTURE_2D, _gl.TEXTURE_WRAP_T, _gl.CLAMP_TO_EDGE);
+    
+    // フレームバッファにテクスチャを関連付ける
+    _gl.framebufferTexture2D(_gl.FRAMEBUFFER, _gl.COLOR_ATTACHMENT0, _gl.TEXTURE_2D, fTexture, 0);
+    
+    // 各種オブジェクトのバインドを解除
+    _gl.bindTexture(_gl.TEXTURE_2D, null);
+    _gl.bindRenderbuffer(_gl.RENDERBUFFER, null);
+    _gl.bindFramebuffer(_gl.FRAMEBUFFER, null);
+    
+    // オブジェクトを返して終了
+    return {f : frameBuffer, d : depthRenderBuffer, t : fTexture};
+}
+    

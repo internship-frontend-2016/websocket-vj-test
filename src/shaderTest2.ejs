@@ -2,7 +2,8 @@
 <html>
 <head lang="ja">
 	<meta charsest="UTF-8">
- 	<script id="fs" type="x-shader/x-fragment">
+
+ 	<script id="tfs" type="x-shader/x-fragment">
 	precision mediump float;
 	#define PI 3.14159265359
 	uniform float time;
@@ -36,13 +37,42 @@
 	    gl_FragColor = vec4(f, f, f, 1.0);
 	}
  	</script>
- 	<script id="vs" type="x-shader/x-vertex">
+ 	<script id="tvs" type="x-shader/x-vertex">
 		attribute vec3 position;
 		void main(void){
 			gl_Position=vec4(position,1.0);
 		}
 	</script>
-	<script src="js/shaderTest.js" type="text/javascript"></script>
+	
+	<!-- テクスチャ張るshader -->
+	<script id="vs" type="x-shader/x-vertex">
+    attribute vec3 position;
+    attribute vec4 color;
+    attribute vec2 textureCoord;
+    uniform   mat4 mvpMatrix;
+    varying   vec4 vColor;
+    varying   vec2 vTextureCoord;
+
+    void main(void){
+        vColor        = color;
+        vTextureCoord = textureCoord;
+        gl_Position   = mvpMatrix * vec4(position, 1.0);
+    }
+    </script>
+    <script id="fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform sampler2D texture;
+    varying vec4      vColor;
+    varying vec2      vTextureCoord;
+
+    void main(void){
+        vec4 smpColor = texture2D(texture, vTextureCoord);
+        gl_FragColor  = vColor * smpColor;
+    }
+    </script>
+    <script src="./js/lib.js" type="text/javascript"></script>
+	<script src="js/shaderTest2.js" type="text/javascript"></script>
 	<title>shaderTest</title>
 	<style type="text/css">
 		*{

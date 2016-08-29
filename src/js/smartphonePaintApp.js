@@ -12,8 +12,8 @@ window.onload=function(){
 	canvas.height=h;
 
 	//背景は白になる
-	c.fillStyle="rgb(255,255,255)";
-	c.fillRect(0,0,$(canvas).width(),$(canvas).height());
+	//c.fillStyle="rgb(255,255,255)";
+	//c.fillRect(0,0,$(canvas).width(),$(canvas).height());
 
 	c.strokeStyle="black";
 	c.lineWidth=5;
@@ -63,8 +63,8 @@ window.onload=function(){
 
 	document.getElementById("delete_button").addEventListener("click",function(){
 		//背景は白になる
-		c.fillStyle="rgb(255,255,255)";
-		c.fillRect(0,0,$(canvas).width(),$(canvas).height());
+		//c.fillStyle="rgb(255,255,255)";
+		//c.fillRect(0,0,$(canvas).width(),$(canvas).height());
 		//c.clearRect(0,0,$(canvas).width(),$(canvas).height());		
 	},false);
 
@@ -81,7 +81,7 @@ window.onload=function(){
 	//画像変換する処理
 	var toImage=document.getElementById("toImage_button");
 	toImage.addEventListener("click",function(){
-		var data=canvas.toDataURL("image/jpeg");
+		var data=canvas.toDataURL("image/png");
 		var imageContents=document.getElementById("imageContents");
 		imageContents.innerHTML="<img src='"+data+"'>";
 		socket.emit("pushImageFromClient",data);

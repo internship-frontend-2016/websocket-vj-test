@@ -81,6 +81,11 @@ module.exports = {
         entries: jsSrc + '/shaderTest.js',
         build: build + '/js',
         outputName: 'shaderTest.js'
+      },
+      {
+        entries: jsSrc + '/shaderTest2.js',
+        build: build + '/js',
+        outputName: 'shaderTest2.js'
       }
     ]
   },
