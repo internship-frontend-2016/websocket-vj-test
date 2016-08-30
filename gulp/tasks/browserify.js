@@ -15,8 +15,6 @@ var _ = require('lodash');
 var $ = require('gulp-load-plugins')();
 var buffer = require('vinyl-buffer');
 
-console.log('babelify', babelify);
-
 /**
  * browserify処理
  * @param devMode
