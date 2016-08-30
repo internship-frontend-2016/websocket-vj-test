@@ -214,21 +214,35 @@ window.onload=function(){
         // ブレンディングを有効にする
         gl.enable(gl.BLEND);
        if(texture){
-            for(var i=0;i<texture.length;i++){
-                if(posZ[i]==-100){
-                    /*うまくできていない*/
-                    // カメラより前にすすんだら、配列を減らす処理が微妙
-                    console.log("削除してます");
-                    texture.shift();
-                    posX.shift();
-                    posY.shift();
-                    posZ.shift();
-                    getnumber--;
-                    console.log(texture);
-                }
-            }
+            // console.log(posZ[1]);
+            // for(var i=0;i<texture.length;i++){
+            //     if(posZ[i]==-100){
+            //         /*うまくできていない*/
+            //         // カメラより前にすすんだら、配列を減らす処理が微妙
+            //         console.log("削除してます");
+            //         texture.shift();
+            //         posX.shift();
+            //         posY.shift();
+            //         posZ.shift();
+            //         getnumber--;
+            //         console.log(texture);
+            //     }
+            // }
+            console.log(posZ);
            for(var i=0;i<texture.length;i++){
+            // console.log(posZ[1]);
             posZ[i]-=1.40;
+            if(posZ[i]<-100){
+                /*うまくできていない*/
+                // カメラより前にすすんだら、配列を減らす処理が微妙
+                console.log("削除してます");
+                texture.shift();
+                posX.shift();
+                posY.shift();
+                posZ.shift();
+                getnumber--;
+                console.log(texture);
+            }
             bindPlatePoly(gl,m,mMatrix,rad,tmpMatrix,mvpMatrix,uniLocation,index,i,posX[i],posY[i],posZ[i]);
            }
        }
