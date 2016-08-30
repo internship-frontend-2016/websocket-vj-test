@@ -3,9 +3,6 @@ var texture=new Array();
 var mx,my,cw,ch;
 
 //フラグ
-var AppearBack=new Array();
-var DropFromUp=new Array();
-
 window.resize=function(){
     cw=window.innerWidth;
     ch=window.innerHeight;
@@ -136,34 +133,6 @@ window.onload=function(){
     socket.on("pushImageFromServer",function(data){
         console.log(data);
         create_texture(gl,data.imgdata,getnumber);
-        /*
-        console.log("data.AppearBack"+data.AppearBack);
-        console.log("data.DropFromUp"+data.DropFromUp);
-        if(typeof data.AppearBack === "undefined"){
-            AppearBack[getnumber]=false;
-        }else{
-            AppearBack[getnumber]=data.AppearBack;
-        }
-        if(typeof data.DropFromUp === "undefined"){
-            console.log("typeof_data.DropFromUp_true");
-            DropFromUp[getnumber]=false;
-        }else{
-            DropFromUp[getnumber]=data.DropFromUp;
-        }
-        console.log("AppearBack"+AppearBack);
-        console.log("DropFromUp"+DropFromUp);
-
-        if(AppearBack[getnumber]){
-            posY[getnumber]=0;
-            posZ[getnumber]=-105;
-        }
-        if(DropFromUp[getnumber]){
-            posY[getnumber]=4;
-            posZ[getnumber]=0;
-        }
-        console.log(posY);
-        console.log(posZ);
-        */
         posX[getnumber]=data.x*5.0;
         posY[getnumber]=data.y*5.0;
         posZ[getnumber]=0;
@@ -245,27 +214,21 @@ window.onload=function(){
         // ブレンディングを有効にする
         gl.enable(gl.BLEND);
        if(texture){
-        /*
             for(var i=0;i<texture.length;i++){
-                if(posZ[i]==7){
+                if(posZ[i]==-100){
+                    /*うまくできていない*/
                     // カメラより前にすすんだら、配列を減らす処理が微妙
+                    console.log("削除してます");
                     texture.shift();
-                    posZ.shift();
+                    posX.shift();
                     posY.shift();
+                    posZ.shift();
                     getnumber--;
                     console.log(texture);
                 }
-            }*/
-           for(var i=0;i<texture.length;i++){
-            /*
-            if(AppearBack[i]){
-                posZ[i]+=0.80;
             }
-            if(DropFromUp[i]){
-                posY[i]-=0.40;
-            }*/
+           for(var i=0;i<texture.length;i++){
             posZ[i]-=1.40;
-            //console.log();
             bindPlatePoly(gl,m,mMatrix,rad,tmpMatrix,mvpMatrix,uniLocation,index,i,posX[i],posY[i],posZ[i]);
            }
        }
