@@ -22,5 +22,5 @@ void main( void )
     f = 1. - clamp(sin(f * PI * 2.) * dot(uv, uv) * iResolution.y / 15. + .5, 0., 1.);
     // add the darkness to the end of the tunnel
     f *= sin(length(uv) - .1);
-    gl_FragColor = vec4(1.0*f,0.5*f,0.0*f, 1.0);
+    gl_FragColor = vec4(0.8*f,0.5*f,0.0*f, 1.0);
 }

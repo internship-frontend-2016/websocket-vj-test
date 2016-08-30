@@ -7,7 +7,7 @@ module.exports = {
 
   'src': {
     'root' : src,
-    'copy' : src + '/copy',
+    'copy' : src + '/copy/**/*',
     'sass' : src + '/sass/**/*.scss',
     'ejs'  : [src + '/**/*.ejs', '!' + src + '/**/_*.ejs'],
     'imgCopy'  : [src + '/img/**/*.{gif,jpg,jpeg,png,svg,mp4}', '!' +src+ '/img/sprite/**/*'],
@@ -16,7 +16,7 @@ module.exports = {
 
   'build': {
     'root' : build,
-    'copy' : build,
+    'copy' : build+'/copy',
     'sass' : build + '/css',
     'ejs'  : build,
     'img'  : build + '/img'

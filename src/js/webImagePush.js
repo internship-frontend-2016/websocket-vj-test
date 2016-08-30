@@ -1,6 +1,11 @@
 // テクスチャ用変数の宣言
 var texture=new Array();
 var mx,my,cw,ch;
+
+//フラグ
+var AppearBack=new Array();
+var DropFromUp=new Array();
+
 window.resize=function(){
     cw=window.innerWidth;
     ch=window.innerHeight;
@@ -17,10 +22,10 @@ window.onload=function(){
     c.addEventListener("mousemove",mouseMove,true);
     // webglコンテキストを取得
     var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-    //console.log(gl);
 
-    /*--背景側--*/
+/*-----------------------------背景側-----------------------------*/
     var tprg=create_program(gl,create_shader(gl,"tvs"),create_shader(gl,"tfs"));
+    //時間をとめる動作
     // run=(tprg!=null);
     // if(!run){
     //     eCheck.checked=false;
@@ -44,25 +49,23 @@ window.onload=function(){
     var tvIndex=create_ibo(gl,tIndex);
     var tvAttLocation=gl.getAttribLocation(tprg,"position");
 
-/*--------------------------------------------------------------------------*/
+/*-----------------------------テクスチャ側---------------------------------------------*/
     // 頂点シェーダとフラグメントシェーダの生成
     var v_shader = create_shader(gl,'vs');
     var f_shader = create_shader(gl,'fs');
     // プログラムオブジェクトの生成とリンク
     var prg = create_program(gl,v_shader, f_shader);
-    
+
     // attributeLocationを配列に取得
     var attLocation = new Array();
     attLocation[0] = gl.getAttribLocation(prg, 'position');
     attLocation[1] = gl.getAttribLocation(prg, 'color');
     attLocation[2] = gl.getAttribLocation(prg, 'textureCoord');
-    
     // attributeの要素数を配列に格納
     var attStride = new Array();
     attStride[0] = 3;
     attStride[1] = 4;
     attStride[2] = 2;
-    
     // 頂点の位置
     var position = [
         -1.0,  1.0,  0.0,
@@ -70,7 +73,6 @@ window.onload=function(){
         -1.0, -1.0,  0.0,
          1.0, -1.0,  0.0
     ];
-    
     // 頂点色
     var color = [
         1.0, 1.0, 1.0, 1.0,
@@ -78,7 +80,6 @@ window.onload=function(){
         1.0, 1.0, 1.0, 1.0,
         1.0, 1.0, 1.0, 1.0
     ];
-    
     // テクスチャ座標
     var textureCoord = [
         0.0, 0.0,
@@ -86,29 +87,22 @@ window.onload=function(){
         0.0, 1.0,
         1.0, 1.0
     ];
-    
     // 頂点インデックス
     var index = [
         0, 1, 2,
         3, 2, 1
     ];
-    
     // VBOとIBOの生成
     var vPosition     = create_vbo(gl,position);
     var vColor        = create_vbo(gl,color);
     var vTextureCoord = create_vbo(gl,textureCoord);
     var VBOList       = [vPosition, vColor, vTextureCoord];
     var iIndex        = create_ibo(gl,index);
-    
-    // // VBOとIBOの登録
-    // set_attribute(gl,VBOList, attLocation, attStride);
-    // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iIndex);
-    
+
     // uniformLocationを配列に取得
     var uniLocation = new Array();
     uniLocation[0]  = gl.getUniformLocation(prg, 'mvpMatrix');
     uniLocation[1]  = gl.getUniformLocation(prg, 'texture');
-    
     // 各種行列の生成と初期化
     var m = new matIV();
     var mMatrix   = m.identity(m.create());
@@ -116,23 +110,21 @@ window.onload=function(){
     var pMatrix   = m.identity(m.create());
     var tmpMatrix = m.identity(m.create());
     var mvpMatrix = m.identity(m.create());
-    
     // ビュー×プロジェクション座標変換行列
     m.lookAt([0.0, 0.0, 5.0], [0, 0, 0], [0, 1, 0], vMatrix);
     m.perspective(45, c.width / c.height, 0.1, 100, pMatrix);
     m.multiply(pMatrix, vMatrix, tmpMatrix);
-    
     // 深度テストを有効にする
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
-    
     // 有効にするテクスチャユニットを指定
     gl.activeTexture(gl.TEXTURE0);
-    
-    // // テクスチャ用変数の宣言
-    // var texture=new Array();
-    //texture[0] = null;
 
+    //テクスチャのy座標
+    var posX=new Array();
+    //テクスチャのy座標
+    var posY=new Array();
+    //テクスチャのz座標
     var posZ=new Array();
     //テクスチャ呼ばれたら
     var socket =io();
@@ -142,17 +134,44 @@ window.onload=function(){
     //サーバーからデータを受け取る
 
     socket.on("pushImageFromServer",function(data){
-    //    var image = document.getElementById("image");
-        create_texture(gl,data,getnumber);
-        posZ[getnumber]=-105;
-        getnumber++;
+        console.log(data);
+        create_texture(gl,data.imgdata,getnumber);
+        /*
+        console.log("data.AppearBack"+data.AppearBack);
+        console.log("data.DropFromUp"+data.DropFromUp);
+        if(typeof data.AppearBack === "undefined"){
+            AppearBack[getnumber]=false;
+        }else{
+            AppearBack[getnumber]=data.AppearBack;
+        }
+        if(typeof data.DropFromUp === "undefined"){
+            console.log("typeof_data.DropFromUp_true");
+            DropFromUp[getnumber]=false;
+        }else{
+            DropFromUp[getnumber]=data.DropFromUp;
+        }
+        console.log("AppearBack"+AppearBack);
+        console.log("DropFromUp"+DropFromUp);
+
+        if(AppearBack[getnumber]){
+            posY[getnumber]=0;
+            posZ[getnumber]=-105;
+        }
+        if(DropFromUp[getnumber]){
+            posY[getnumber]=4;
+            posZ[getnumber]=0;
+        }
+        console.log(posY);
+        console.log(posZ);
+        */
+        posX[getnumber]=data.x*5.0;
+        posY[getnumber]=data.y*5.0;
+        posZ[getnumber]=0;
         console.log(getnumber);
         console.log(texture);
-    });
+        getnumber++;
 
-    // テクスチャを生成
-    //create_texture(gl,"../img/test.jpg",0);
-    //create_texture(gl,img_data);
+    });
     // フレームバッファオブジェクトの取得
     var fBufferWidth  = cw;
     var fBufferHeight = ch;
@@ -162,16 +181,17 @@ window.onload=function(){
     var count2=0;
     mx=0.5;my=0.5;
     var startTime=new Date().getTime();
-    //
+    //ブレンドファンク
     gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
     // 恒常ループ
     (function loop(){
+
+        /*-------------------フレームバッファ----------------------*/
+        //時間
         var time=(new Date().getTime() - startTime)*0.001;
         /*--フレームバッファをバインド--*/
         gl.bindFramebuffer(gl.FRAMEBUFFER,fBuffer.f);
         gl.clearColor(0.0,0.0,0.0,1.0);
-    //    gl.clearDepth(1.0);
-    //    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         gl.useProgram(tprg);
@@ -183,28 +203,27 @@ window.onload=function(){
         gl.vertexAttribPointer(tvAttLocation,3,gl.FLOAT,false,0,0);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,tvIndex);
 
-    //  console.log(time+tempTime);
         gl.uniform1f(tUniLocation[0],time);
         gl.uniform2fv(tUniLocation[1],[mx,my]);
         gl.uniform2fv(tUniLocation[2],[cw,ch]);
         gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_SHORT,0);
-    //  gl.flush();
         gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+        /*-------------------フレームバッファ----------------------*/
 
         // canvasを初期化
-//        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        var hsv = hsva(count2 % 360, 1, 1, 1);
-        gl.clearColor(hsv[0], hsv[1], hsv[2], hsv[3]);
+        gl.clearColor(0.0,0.0,0.0,1.0);
         gl.clearDepth(1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         // カウンタを元にラジアンを算出
         count++;
-        if (count % 10 == 0) {
-            count2++;
-        }
+
+        // if (count % 10 == 0) {
+        //     count2++;
+        // }
         var rad = (count % 360) * Math.PI / 180;
 
+        /*------------------背景テクスチャ(オフスクリーンレンタリング)---------------------*/
         gl.useProgram(prg);
         // ブレンディングを無効にする
         gl.disable(gl.BLEND);
@@ -213,32 +232,41 @@ window.onload=function(){
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iIndex);
 /*移動、回転、拡大縮小*/
         m.identity(mMatrix);
-//        m.rotate(mMatrix, rad, [0, 1, 0], mMatrix);
         m.translate(mMatrix,[0.0,0.0,-95.0],mMatrix);
         m.scale(mMatrix,[100.0,70.0,1.0],mMatrix);
         m.multiply(tmpMatrix, mMatrix, mvpMatrix);
-        //登録
+        //uniformを登録
         gl.bindTexture(gl.TEXTURE_2D,fBuffer.t);
         gl.uniform1i(uniLocation[1], 0);
         gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+
+        /*テクスチャ*/
         // ブレンディングを有効にする
         gl.enable(gl.BLEND);
        if(texture){
+        /*
             for(var i=0;i<texture.length;i++){
                 if(posZ[i]==7){
+                    // カメラより前にすすんだら、配列を減らす処理が微妙
                     texture.shift();
                     posZ.shift();
+                    posY.shift();
                     getnumber--;
                     console.log(texture);
-                    /*
-カメラより前にすすんだら、配列を減らす処理が微妙
-                    */
                 }
-            }
+            }*/
            for(var i=0;i<texture.length;i++){
-            posZ[i]+=0.80;
-            bindPlatePoly(gl,m,mMatrix,rad,tmpMatrix,mvpMatrix,uniLocation,index,i,posZ[i]);
+            /*
+            if(AppearBack[i]){
+                posZ[i]+=0.80;
+            }
+            if(DropFromUp[i]){
+                posY[i]-=0.40;
+            }*/
+            posZ[i]-=1.40;
+            //console.log();
+            bindPlatePoly(gl,m,mMatrix,rad,tmpMatrix,mvpMatrix,uniLocation,index,i,posX[i],posY[i],posZ[i]);
            }
        }
         // コンテキストの再描画
@@ -255,11 +283,11 @@ function mouseMove(e){
     mx=e.offsetX/cw;
     my=e.offsetY/ch;
 }
-function bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_uniLocation,_index,_number,_posZ){
+function bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_uniLocation,_index,_number,_posX,_posY,_posZ){
     // モデル座標変換行列の生成
     _m.identity(_mMatrix);
-    _m.translate(_mMatrix,[0,0,_posZ],_mMatrix);
-    _m.rotate(_mMatrix, _rad, [0, 1, 0], _mMatrix);
+    _m.translate(_mMatrix,[_posX,_posY,_posZ],_mMatrix);
+//    _m.rotate(_mMatrix, _rad, [0, 1, 0], _mMatrix);
     _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
     
     // テクスチャをバインドする

@@ -23,8 +23,11 @@ io.on("connection",function(socket){
 
 	//smartphonePaintAppから送られてきた
 	socket.on("pushImageFromClient",function(data){
-		console.log("pushImageFromClient::"+data);
+		console.log("pushImageFromClient::"+data.imgdata);
+		console.log("pushImageFromClient::"+data.x);
+		console.log("pushImageFromClient::"+data.y);
 		io.emit("pushImageFromServer",data);
+//		io.emit("pushImageFromServer",data.AppearBack);
 		//socket.broadcast.emit("chat message",msg);
 	});	
 	socket.on("disconnect",function(){

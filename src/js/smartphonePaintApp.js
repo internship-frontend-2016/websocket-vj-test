@@ -1,6 +1,10 @@
+var canvas;
+var submitCanvas;
 window.onload=function(){
 	var socket=io();
-	var canvas=document.getElementById("myCanvas");
+	canvas=document.getElementById("myCanvas");
+	submitCanvas=document.getElementById("submitCanvas");
+	var subc=submitCanvas.getContext("2d");
 	var c=canvas.getContext("2d");
 
 	var w=316;
@@ -11,9 +15,9 @@ window.onload=function(){
 	canvas.width=w;
 	canvas.height=h;
 
-	//背景は白になる
-	//c.fillStyle="rgb(255,255,255)";
-	//c.fillRect(0,0,$(canvas).width(),$(canvas).height());
+	//送信する側のキャンバス
+	submitCanvas.width=w;
+	submitCanvas.height=h;
 
 	c.strokeStyle="black";
 	c.lineWidth=5;
@@ -62,10 +66,7 @@ window.onload=function(){
 	setEventLineWidth("large",c);
 
 	document.getElementById("delete_button").addEventListener("click",function(){
-		//背景は白になる
-		//c.fillStyle="rgb(255,255,255)";
-		//c.fillRect(0,0,$(canvas).width(),$(canvas).height());
-		//c.clearRect(0,0,$(canvas).width(),$(canvas).height());		
+		c.clearRect(0,0,$(canvas).width(),$(canvas).height());		
 	},false);
 
 	//ドキュメントのタッチイベントの初期化
@@ -78,16 +79,73 @@ window.onload=function(){
 	//document.addEventListener("gestureend",stopDefault,false);
 
 
-	//画像変換する処理
-	var toImage=document.getElementById("toImage_button");
-	toImage.addEventListener("click",function(){
-		var data=canvas.toDataURL("image/png");
-		var imageContents=document.getElementById("imageContents");
-		imageContents.innerHTML="<img src='"+data+"'>";
-		socket.emit("pushImageFromClient",data);
-	},false);
-}
 
+	//画像をサーバーに送信する処理
+	//var toImage=document.getElementById("toImage_AppearBack");
+	document.getElementById("toImage_AppearBack").addEventListener("click",function(){
+		var image=createbase64();
+		console.log(image);
+		socket.emit("pushImageFromClient",{
+			imgdata:image,
+			AppearBack:true
+		});
+	},false);
+	document.getElementById("toImage_DropFromUp").addEventListener("click",function(){
+		var image=createbase64();
+		console.log(image);
+		socket.emit("pushImageFromClient",{
+			imgdata:image,
+			DropFromUp:true
+		});
+	},false);
+
+	var subPos;
+	var normalPosX,normalPosY;
+	var image;
+	var sentFlag;
+	var sendingTimer;
+	/*-------------画像を送信する--------------*/
+
+	submitCanvas.addEventListener("touchstart",function(e){
+		sentFlag=true;
+		subPos=getPosT(e,submitCanvas);
+		normalPosX=(subPos.x*2-w)/w;
+		normalPosY=-((subPos.y*2-h)/h);
+		image=createbase64();
+	sendingTimer=setInterval(sentdata,100);
+	},false);
+
+	submitCanvas.addEventListener("touchmove",function(e){
+		//sentFlag=true;
+		subPos=getPosT(e,submitCanvas);
+		normalPosX=(subPos.x*2-w)/w;
+		normalPosY=-((subPos.y*2-h)/h);
+		image=createbase64();
+	},false);
+	submitCanvas.addEventListener("touchend",function(){
+		sentFlag=false;
+		console.log("touchend");
+		clearInterval(sendingTimer);
+	},false);
+
+	function sentdata(){
+		console.log("sentdata_function");
+		
+		socket.emit("pushImageFromClient",{
+			imgdata:image,
+			x:normalPosX,
+			y:normalPosY
+		});
+				
+	}
+
+}
+function createbase64(){
+	var data=canvas.toDataURL("image/png");
+	var imageContents=document.getElementById("imageContents");
+	imageContents.innerHTML="<img src='"+data+"'>";	
+	return data;
+}
 //タップ関連関数
 function scrollX(){return document.documentElement.scrollLeft||document.body.scrollLeft;}
 function scrollY(){return document.documentElement.scrollTop||document.body.scrollTop;}
@@ -128,8 +186,6 @@ function setEventLineWidth(_id,_c){
 
 //ブラウザのデフォルト動作を禁止する
 function stopDefault(e){
-	//if(e.touches[0].target.tagName.toLowerCase()=="li"){
-		//console.log(e.touches[0].target);
 	if(e.touches[0].target.tagName.toLowerCase() == "li"){
 		//console.log(e.touches[0].target.tagName.toLowerCase());
 		return;
