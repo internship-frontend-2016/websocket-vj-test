@@ -22,15 +22,11 @@ window.onload=function(){
 
 /*-----------------------------背景側-----------------------------*/
     var tprg=create_program(gl,create_shader(gl,"tvs"),create_shader(gl,"tfs"));
-    //時間をとめる動作
-    // run=(tprg!=null);
-    // if(!run){
-    //     eCheck.checked=false;
-    // }
     var tUniLocation=new Array();
     tUniLocation[0]=gl.getUniformLocation(tprg,"time");
     tUniLocation[1]=gl.getUniformLocation(tprg,"mouse");
     tUniLocation[2]=gl.getUniformLocation(tprg,"iResolution");
+    tUniLocation[3]=gl.getUniformLocation(tprg,"hsv");
 
     var tPosition=[
     -1.0,1.0,0.0,
@@ -155,6 +151,12 @@ window.onload=function(){
     // 恒常ループ
     (function loop(){
 
+        // カウンタを元にラジアンを算出
+        count++;
+        if (count % 10 == 0) {
+            count2++;
+        }
+        var hsv=hsva(count2%360,1,1,1);
         /*-------------------フレームバッファ----------------------*/
         //時間
         var time=(new Date().getTime() - startTime)*0.001;
@@ -175,6 +177,7 @@ window.onload=function(){
         gl.uniform1f(tUniLocation[0],time);
         gl.uniform2fv(tUniLocation[1],[mx,my]);
         gl.uniform2fv(tUniLocation[2],[cw,ch]);
+        gl.uniform4fv(tUniLocation[3],[hsv[0],hsv[1],hsv[2],hsv[3]]);
         gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_SHORT,0);
         gl.bindFramebuffer(gl.FRAMEBUFFER,null);
         /*-------------------フレームバッファ----------------------*/
@@ -184,12 +187,6 @@ window.onload=function(){
         gl.clearDepth(1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        // カウンタを元にラジアンを算出
-        count++;
-
-        // if (count % 10 == 0) {
-        //     count2++;
-        // }
         var rad = (count % 360) * Math.PI / 180;
 
         /*------------------背景テクスチャ(オフスクリーンレンタリング)---------------------*/
@@ -199,7 +196,7 @@ window.onload=function(){
         // VBOとIBOの登録
         set_attribute(gl,VBOList, attLocation, attStride);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iIndex);
-/*移動、回転、拡大縮小*/
+        /*移動、回転、拡大縮小*/
         m.identity(mMatrix);
         m.translate(mMatrix,[0.0,0.0,-95.0],mMatrix);
         m.scale(mMatrix,[100.0,70.0,1.0],mMatrix);
@@ -214,26 +211,9 @@ window.onload=function(){
         // ブレンディングを有効にする
         gl.enable(gl.BLEND);
        if(texture){
-            // console.log(posZ[1]);
-            // for(var i=0;i<texture.length;i++){
-            //     if(posZ[i]==-100){
-            //         /*うまくできていない*/
-            //         // カメラより前にすすんだら、配列を減らす処理が微妙
-            //         console.log("削除してます");
-            //         texture.shift();
-            //         posX.shift();
-            //         posY.shift();
-            //         posZ.shift();
-            //         getnumber--;
-            //         console.log(texture);
-            //     }
-            // }
-            console.log(posZ);
            for(var i=0;i<texture.length;i++){
-            // console.log(posZ[1]);
             posZ[i]-=1.40;
             if(posZ[i]<-100){
-                /*うまくできていない*/
                 // カメラより前にすすんだら、配列を減らす処理が微妙
                 console.log("削除してます");
                 texture.shift();
@@ -241,16 +221,12 @@ window.onload=function(){
                 posY.shift();
                 posZ.shift();
                 getnumber--;
-                console.log(texture);
             }
             bindPlatePoly(gl,m,mMatrix,rad,tmpMatrix,mvpMatrix,uniLocation,index,i,posX[i],posY[i],posZ[i]);
            }
        }
         // コンテキストの再描画
         gl.flush();
-
-        // ループのために再帰呼び出し
-        //setTimeout(loop, 1000 / 30);
         //タブが非アクティブの場合はFPSを落とす
         requestAnimationFrame(loop);
     })();
@@ -264,7 +240,6 @@ function bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_uniLocation,_
     // モデル座標変換行列の生成
     _m.identity(_mMatrix);
     _m.translate(_mMatrix,[_posX,_posY,_posZ],_mMatrix);
-//    _m.rotate(_mMatrix, _rad, [0, 1, 0], _mMatrix);
     _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
     
     // テクスチャをバインドする
