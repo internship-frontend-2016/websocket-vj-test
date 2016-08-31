@@ -1,7 +1,7 @@
 # websocket-vj-test
 
 スマートフォンから、canvas上で描いた絵をwebSocket通信を使って、webgl上に描画するウェブアプリ。
-
+![websocket-vj](https://github.com/internship-frontend-2016/websocket-vj-test/blob/master/logo.png)
 ## 各バージョン
 
 以下のバージョンで動作します
