@@ -121,7 +121,6 @@ window.onload=function(){
     var posZ=new Array();
     //テクスチャ呼ばれたら
     var socket =io();
-
     //socketのイベントが何回きたかしらべる
     var getnumber=0;
     //サーバーからデータを受け取る
@@ -150,7 +149,6 @@ window.onload=function(){
     gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
     // 恒常ループ
     (function loop(){
-
         // カウンタを元にラジアンを算出
         count++;
         if (count % 10 == 0) {
@@ -212,7 +210,7 @@ window.onload=function(){
         gl.enable(gl.BLEND);
        if(texture){
            for(var i=0;i<texture.length;i++){
-            posZ[i]-=1.40;
+            posZ[i]-=0.40;
             if(posZ[i]<-100){
                 // カメラより前にすすんだら、配列を減らす処理が微妙
                 console.log("削除してます");
