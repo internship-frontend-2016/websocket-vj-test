@@ -1,6 +1,8 @@
 var getTouchMapTransition=require("./get-touch-map-transition");
 module.exports=function(_w,_h,_canvas){
 	var socket=io();
+	//var c=_canvas.getContext("2d");
+	//console.log(c);
 	var submitCanvas=document.getElementById("submitCanvas");
 	var subc=submitCanvas.getContext("2d");
 
@@ -30,6 +32,9 @@ module.exports=function(_w,_h,_canvas){
 	submitCanvas.addEventListener("touchend",function(){
 		clearInterval(sendingTimer);
 	},false);
+
+
+
 
 	function sentdata(){		
 		socket.emit("pushImageFromClient",{

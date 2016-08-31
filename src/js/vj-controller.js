@@ -9,5 +9,5 @@ window.onload=function(){
 	//getTouchMapTransition();
 	init();
 	initPaintCanvas(w,h,canvas);
-	initControllerPad(w,h,canvas)
+	initControllerPad(w,h,canvas);
 }
