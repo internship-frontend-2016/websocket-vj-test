@@ -25,6 +25,7 @@ io.on("connection",function(socket){
 		console.log("pushImageFromClient::"+data.imgdata);
 		console.log("pushImageFromClient::"+data.x);
 		console.log("pushImageFromClient::"+data.y);
+		console.log("pushImageFromClient::"+data.frag);
 		io.emit("pushImageFromServer",data);
 	});	
 

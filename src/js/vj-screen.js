@@ -71,10 +71,21 @@ window.onload=function(){
     var posY=[];
     //テクスチャのz座標
     var posZ=[];
+
+    //テクスチャのy座標
+    var posXm=[];
+    //テクスチャのy座標
+    var posYm=[];
+    //テクスチャのz座標
+    var posZm=[];
+
+
+
     //socketのイベントが何回きたかしらべる
     var getnumber=0;
 
     var joFrag=false;
+
 
     //サーバーからデータを受け取る
     socket.on("pushImageFromServer",function(data){
@@ -84,9 +95,18 @@ window.onload=function(){
         }else{
             create_texture(gl,data.imgdata,getnumber);
         }
-        posX[getnumber]=data.x*5.0;
-        posY[getnumber]=data.y*5.0;
-        posZ[getnumber]=0;
+        console.log("data.frag"+data.frag);
+        
+        if(data.frag==true){
+            posXm[getnumber]=0;
+            posYm[getnumber]=0;
+            posZm[getnumber]=-95;
+        }else{
+            posX[getnumber]=data.x*5.0;
+            posY[getnumber]=data.y*5.0;
+            posZ[getnumber]=0;
+
+        }
         console.log(getnumber);
         console.log(texture);
         getnumber++;
@@ -139,7 +159,7 @@ window.onload=function(){
         //全体的な
         //shaderBackgroundの場合
         if(select==1||select==2){
-            bindOverall(gl,overallData,fBuffer,m,mMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,getnumber);
+            bindOverall(gl,overallData,fBuffer,m,mMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber);
         }else if(select==3){
             bindInSphere(c,gl,overallData,[0, 0, 0],[0, 1, 0],inSphereData,fBuffer,m,mMatrix,pMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,getnumber,sphereCountW,sphereCountH);
         }
@@ -293,7 +313,7 @@ function bindBackground(_gl,_fBuffer,_backgroundData,_time,_mx,_my,_cw,_ch,_hsv)
     _gl.bindFramebuffer(_gl.FRAMEBUFFER,null);
 
 }
-function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_rad,_texture,_posX,_posY,_posZ,_getnumber){
+function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_rad,_texture,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_getnumber,){
     // canvasを初期化
     _gl.clearColor(0.0,0.0,0.0,1.0);
     _gl.clearDepth(1.0);
@@ -322,7 +342,9 @@ function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix
     _gl.enable(_gl.BLEND);
    if(_texture){
        for(var i=0;i<_texture.length;i++){
+
         _posZ[i]-=0.40;
+        _posZm[i]+=1.0;
         if(_posZ[i]<-100){
             // カメラより前にすすんだら、配列を減らす処理が微妙
             console.log("削除してます");
@@ -331,8 +353,15 @@ function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix
             _posY.shift();
             _posZ.shift();
             _getnumber--;
+        }else if(_posZm[i]>10){
+            console.log("削除してます");
+            _texture.shift();
+            _posXm.shift();
+            _posYm.shift();
+            _posZm.shift();
+            _getnumber--;
         }
-        bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i]);
+        bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i],_posXm[i],_posYm[i],_posZm[i]);
        }
    }
 }
@@ -351,18 +380,41 @@ function bindInSphere(_c,_gl,_overallData,_centerPosition,_upPosition,_inSphereD
     var tmpMatrix = m.identity(m.create());
     var mvpMatrix = m.identity(m.create());
     // ビュー×プロジェクション座標変換行列
-    var eyePosition=[0.0, 0.0, 5.0];
+    var eyePosition=[0.0, 0.0, -5.0];
     var centerPosition=[0.0, 0.0, 0.0];
     var upPosition=[0.0, 1.0, 0.0];
     //m.lookAt(eyePosition, centerPosition, upPosition, vMatrix);
     m.perspective(45, _c.width / _c.height, 0.1, 100, pMatrix);
     m.multiply(pMatrix, vMatrix, tmpMatrix);
 
+
+var q=new qtnIV();
+var camQ=q.identity(q.create());
+var camW=q.identity(q.create());
+var camH=q.identity(q.create());
+
+q.rotate(radW,[0,1,0],camW);
+q.rotate(radH,[1,0,0],camH);
+//q.multiply(camW,camH,camQ);
+q.multiply(camH,camW,camQ);
+var camUp=[];
+var camforward=[];
+q.toVecIII(upPosition,camQ,camUp);
+q.toVecIII([0.0,0.0,1.0],camQ,camforward);
+
 /*------------------カメラを回転させているけど、まだカメラの向きがいまいち-----------------------------*/
-    centerPosition=[eyePosition[0]+Math.cos(radW)*5.0,eyePosition[1]+Math.sin(radH)*5.0,eyePosition[2]+Math.sin(radW)*5.0];
-console.log(centerPosition);
+    //centerPosition=[eyePosition[0]+Math.cos(radW)*5.0,eyePosition[1]+Math.sin(radH)*5.0,eyePosition[2]+Math.sin(radW)*5.0];
+    //upPosition=[upPosition[0],Math.sin(radH),upPosition[2]+Math.cos(radH)];
+    //upPosition=[upPosition[0],Math.sin(radH),upPosition[2]];
+  //  console.log("centerPosition"+centerPosition);
+    //console.log("upPosition"+upPosition);
     // ビュー×プロジェクション座標変換行列
-    m.lookAt(eyePosition, centerPosition, upPosition, vMatrix);
+    //m.lookAt(eyePosition, centerPosition, upPosition, vMatrix);
+    var eyeCam=[];
+    eyeCam[0]=eyePosition[0]+camforward[0];
+    eyeCam[1]=eyePosition[1]+camforward[1];
+    eyeCam[2]=eyePosition[2]+camforward[2];
+    m.lookAt(eyePosition, eyeCam, camUp, vMatrix);
 
     m.multiply(pMatrix, vMatrix, tmpMatrix);
 
@@ -379,29 +431,15 @@ console.log(centerPosition);
     set_attribute(_gl,_inSphereData.VBOList, _overallData.attLocation, _overallData.attStride);
     _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, _inSphereData.iIndex);
     /*移動、回転、拡大縮小*/
-/*
-    _m.identity(_mMatrix);
-    //_m.translate(_mMatrix,[0.0,0.0,5.0],_mMatrix);
-    _m.rotate(_mMatrix, 180, [1, 0, 0], _mMatrix);
 
-    // _m.rotate(_mMatrix, radH, [1, 0, 0], _mMatrix);
-    // _m.rotate(_mMatrix, radW, [0, 1, 0], _mMatrix);
-    _m.scale(_mMatrix,[2.0,2.0,2.0],_mMatrix);
-    _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
-*/
     m.identity(mMatrix);
-    //m.translate(mMatrix,[0.0,0.0,5.0],mMatrix);
+    m.translate(mMatrix,[0.0,0.0,0.0],mMatrix);
     m.rotate(mMatrix, 180, [1, 0, 0], mMatrix);
 
-    // _m.rotate(_mMatrix, radH, [1, 0, 0], _mMatrix);
-    // _m.rotate(_mMatrix, radW, [0, 1, 0], _mMatrix);
-    //m.scale(mMatrix,[10.0,10.0,10.0],mMatrix);
     m.multiply(tmpMatrix, mMatrix, mvpMatrix);
     //uniformを登録
     _gl.bindTexture(_gl.TEXTURE_2D,sphereTexture);
     _gl.uniform1i(_overallData.uniLocation[1], 0);
-    // _gl.uniformMatrix4fv(_overallData.uniLocation[0], false, _mvpMatrix);
-
     _gl.uniformMatrix4fv(_overallData.uniLocation[0], false, mvpMatrix);
 
     _gl.drawElements(_gl.TRIANGLES, _inSphereData.index.length, _gl.UNSIGNED_SHORT, 0);
@@ -431,10 +469,24 @@ console.log(centerPosition);
    }
 
 }
-function bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_uniLocation,_number,_posX,_posY,_posZ){
+function bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_uniLocation,_number,_posX,_posY,_posZ,_posXm,_posYm,_posZm){
     // モデル座標変換行列の生成
     _m.identity(_mMatrix);
     _m.translate(_mMatrix,[_posX,_posY,_posZ],_mMatrix);
+    _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
+    
+    // テクスチャをバインドする
+    _gl.bindTexture(_gl.TEXTURE_2D, texture[_number]);
+    
+    // uniform変数にテクスチャを登録
+   _gl.uniform1i(_uniLocation[1], 0);
+
+    // uniform変数の登録と描画
+    _gl.uniformMatrix4fv(_uniLocation[0], false, _mvpMatrix);
+    _gl.drawElements(_gl.TRIANGLES, 6, _gl.UNSIGNED_SHORT, 0);
+
+    _m.identity(_mMatrix);
+    _m.translate(_mMatrix,[_posXm,_posYm,_posZm],_mMatrix);
     _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
     
     // テクスチャをバインドする
