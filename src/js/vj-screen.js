@@ -96,7 +96,7 @@ window.onload=function(){
             create_texture(gl,data.imgdata,getnumber);
         }
         console.log("data.frag"+data.frag);
-        
+        //真ん中のボタンを押したかどうか
         if(data.frag==true){
             posXm[getnumber]=0;
             posYm[getnumber]=0;
@@ -105,7 +105,14 @@ window.onload=function(){
             posX[getnumber]=data.x*5.0;
             posY[getnumber]=data.y*5.0;
             posZ[getnumber]=0;
+        }
 
+
+        //select
+        if(select==3){
+            posX[getnumber]=data.x*5.0;
+            posY[getnumber]=5.0;
+            posZ[getnumber]=data.y;
         }
         console.log(getnumber);
         console.log(texture);
@@ -137,6 +144,7 @@ window.onload=function(){
 
     //ブレンドファンクしてるぞ
     gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+    
     // 恒常ループ
     (function loop(){
         // カウンタを元にラジアンを算出
@@ -161,7 +169,8 @@ window.onload=function(){
         if(select==1||select==2){
             bindOverall(gl,overallData,fBuffer,m,mMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber);
         }else if(select==3){
-            bindInSphere(c,gl,overallData,[0, 0, 0],[0, 1, 0],inSphereData,fBuffer,m,mMatrix,pMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,getnumber,sphereCountW,sphereCountH);
+            // bindInSphere(c,gl,overallData,[0, 0, 0],[0, 1, 0],inSphereData,fBuffer,m,mMatrix,pMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,getnumber,sphereCountW,sphereCountH);
+            bindInSphere(c,gl,overallData,centerPosition,upPosition,inSphereData,fBuffer,m,mMatrix,pMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber,sphereCountW,sphereCountH);
         }
         // コンテキストの再描画
         gl.flush();
@@ -185,10 +194,10 @@ function KeyDown(e){
     //十字キー
         if(e.keyCode==37){
             //左
-            sphereCountW--;
+            sphereCountW++;
         }else if(e.keyCode==39){
             //右
-            sphereCountW++;
+            sphereCountW--;
         }else if(e.keyCode==38){
             //上
             sphereCountH--;
@@ -339,6 +348,7 @@ function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix
 
     /*テクスチャ*/
     // ブレンディングを有効にする
+
     _gl.enable(_gl.BLEND);
    if(_texture){
        for(var i=0;i<_texture.length;i++){
@@ -361,11 +371,11 @@ function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix
             _posZm.shift();
             _getnumber--;
         }
-        bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i],_posXm[i],_posYm[i],_posZm[i]);
+        bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i],_posXm[i],_posYm[i],_posZm[i],false);
        }
    }
 }
-function bindInSphere(_c,_gl,_overallData,_centerPosition,_upPosition,_inSphereData,_fBuffer,_m,_mMatrix,_pMatrix,_tmpMatrix,_mvpMatrix,_rad,_texture,_posX,_posY,_posZ,_getnumber,_sphereCountW,_sphereCountH){
+function bindInSphere(_c,_gl,_overallData,_centerPosition,_upPosition,_inSphereData,_fBuffer,_m,_mMatrix,_pMatrix,_tmpMatrix,_mvpMatrix,_rad,_texture,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_getnumber,_sphereCountW,_sphereCountH){
      var radW = (_sphereCountW % 360) * Math.PI / 180;
      var radH = (_sphereCountH % 360) * Math.PI / 180;
 
@@ -380,7 +390,8 @@ function bindInSphere(_c,_gl,_overallData,_centerPosition,_upPosition,_inSphereD
     var tmpMatrix = m.identity(m.create());
     var mvpMatrix = m.identity(m.create());
     // ビュー×プロジェクション座標変換行列
-    var eyePosition=[0.0, 0.0, -5.0];
+    //var eyePosition=[0.0, 0.0, -5.0];
+    var eyePosition=[0.0, 0.0, 5.0];
     var centerPosition=[0.0, 0.0, 0.0];
     var upPosition=[0.0, 1.0, 0.0];
     //m.lookAt(eyePosition, centerPosition, upPosition, vMatrix);
@@ -400,7 +411,8 @@ q.multiply(camH,camW,camQ);
 var camUp=[];
 var camforward=[];
 q.toVecIII(upPosition,camQ,camUp);
-q.toVecIII([0.0,0.0,1.0],camQ,camforward);
+//q.toVecIII([0.0,0.0,1.0],camQ,camforward);
+q.toVecIII([0.0,0.0,-1.0],camQ,camforward);
 
 /*------------------カメラを回転させているけど、まだカメラの向きがいまいち-----------------------------*/
     //centerPosition=[eyePosition[0]+Math.cos(radW)*5.0,eyePosition[1]+Math.sin(radH)*5.0,eyePosition[2]+Math.sin(radW)*5.0];
@@ -433,7 +445,8 @@ q.toVecIII([0.0,0.0,1.0],camQ,camforward);
     /*移動、回転、拡大縮小*/
 
     m.identity(mMatrix);
-    m.translate(mMatrix,[0.0,0.0,0.0],mMatrix);
+    m.translate(mMatrix,[0.0,0.0,5.0],mMatrix);
+    m.scale(mMatrix,[10.0,10.0,10.0],mMatrix);
     m.rotate(mMatrix, 180, [1, 0, 0], mMatrix);
 
     m.multiply(tmpMatrix, mMatrix, mvpMatrix);
@@ -451,10 +464,9 @@ q.toVecIII([0.0,0.0,1.0],camQ,camforward);
     _gl.enable(_gl.BLEND);
    if(_texture){
        for(var i=0;i<_texture.length;i++){
-        //_posZ[i]-=0.40;
-        //_posY[i]=3.0;
-        _posZ[i]=4.5;
-        //console.log("posY[i]"+_posY[i]);
+        _posY[i]-=0.1;
+        // _posZ[i]-=0.40;
+        _posZm[i]+=1.0;
         if(_posZ[i]<-100){
             // カメラより前にすすんだら、配列を減らす処理が微妙
             console.log("削除してます");
@@ -463,16 +475,26 @@ q.toVecIII([0.0,0.0,1.0],camQ,camforward);
             _posY.shift();
             _posZ.shift();
             _getnumber--;
+        }else if(_posZm[i]>10){
+            console.log("削除してます");
+            _texture.shift();
+            _posXm.shift();
+            _posYm.shift();
+            _posZm.shift();
+            _getnumber--;
         }
-        bindPlatePoly(_gl,_m,mMatrix,_rad,tmpMatrix,mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i]);
+        bindPlatePoly(_gl,_m,mMatrix,_rad,tmpMatrix,mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i],true);
        }
    }
 
 }
-function bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_uniLocation,_number,_posX,_posY,_posZ,_posXm,_posYm,_posZm){
+function bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_uniLocation,_number,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_scaleFrag){
     // モデル座標変換行列の生成
     _m.identity(_mMatrix);
     _m.translate(_mMatrix,[_posX,_posY,_posZ],_mMatrix);
+    if(_scaleFrag){
+        _m.scale(_mMatrix,[0.5,0.5,0.5],_mMatrix);
+    }
     _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
     
     // テクスチャをバインドする
@@ -487,6 +509,9 @@ function bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_uniLocation,_
 
     _m.identity(_mMatrix);
     _m.translate(_mMatrix,[_posXm,_posYm,_posZm],_mMatrix);
+    if(_scaleFrag){
+        _m.scale(_mMatrix,[0.5,0.5,0.5],_mMatrix);
+    }
     _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
     
     // テクスチャをバインドする
