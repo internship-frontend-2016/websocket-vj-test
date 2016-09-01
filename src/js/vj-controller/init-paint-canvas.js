@@ -58,16 +58,18 @@ module.exports=function(_w,_h,_canvas){
 		c.clearRect(0,0,$(_canvas).width(),$(_canvas).height());		
 	},false);
 
-	//触ってはいけないボタン
-	document.getElementById("dontTouch_button").addEventListener("click",function(){
-		console.log("dontTouch_button");
-		var img=new Image();
-		img.src="../../img/joe.jpg";
-		img.onload=function(){
-			c.drawImage(img,0,0,_w,_h);
-		}
+//触ってはいけないボタン
+/*-----------------------------------------------------------------------------------------*/
+	// document.getElementById("dontTouch_button").addEventListener("click",function(){
+	// 	console.log("dontTouch_button");
+	// 	var img=new Image();
+	// 	img.src="../../img/joe.jpg";
+	// 	img.onload=function(){
+	// 		c.drawImage(img,0,0,_w,_h);
+	// 	}
 
-	},false);
+	// },false);
+/*-----------------------------------------------------------------------------------------*/
 }
 function setEventButtonColor(_id,_c){
 	document.getElementById(_id).addEventListener("click",function(){

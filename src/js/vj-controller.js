@@ -1,4 +1,5 @@
-var getTouchMapTransition=require("./vj-controller/get-touch-map-transition");
+'use strict';
+//var getTouchMapTransition=require("./vj-controller/get-touch-map-transition");
 var initPaintCanvas=require("./vj-controller/init-paint-canvas");
 var initControllerPad=require("./vj-controller/init-controller-pad");
 var init=require("./vj-controller/init");
@@ -10,4 +11,4 @@ window.onload=function(){
 	init();
 	initPaintCanvas(w,h,canvas);
 	initControllerPad(w,h,canvas);
-}
+};

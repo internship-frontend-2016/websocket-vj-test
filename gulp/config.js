@@ -53,31 +53,6 @@ module.exports = {
         outputName: 'vj-screen.js'
       },
       {
-        entries: jsSrc + '/vj-screen-test.js',
-        build: build + '/js',
-        outputName: 'vj-screen-test.js'
-      },
-      {
-        entries: jsSrc + '/smartphonePaintApp.js',
-        build: build + '/js',
-        outputName: 'smartphonePaintApp.js'
-      },
-      {
-        entries: jsSrc + '/imagePush.js',
-        build: build + '/js',
-        outputName: 'imagePush.js'
-      },
-      {
-        entries: jsSrc + '/webImagePush.js',
-        build: build + '/js',
-        outputName: 'webImagePush.js'
-      },
-      {
-        entries: jsSrc + '/webglTest.js',
-        build: build + '/js',
-        outputName: 'webglTest.js'
-      },
-      {
         entries: jsSrc + '/shaderTest.js',
         build: build + '/js',
         outputName: 'shaderTest.js'
@@ -86,6 +61,11 @@ module.exports = {
         entries: jsSrc + '/shaderTest2.js',
         build: build + '/js',
         outputName: 'shaderTest2.js'
+      },
+      {
+        entries: jsSrc + '/test-webgl.js',
+        build: build + '/js',
+        outputName: 'test-webgl.js'
       }
     ]
   },

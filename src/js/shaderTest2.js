@@ -1,18 +1,19 @@
+"use strict";
 var c,cw,ch,mx,my,gl,run,eCheck;
 var startTime;
 var time=0.0;
 var tempTime=0.0;
 var fps=1000/30;
 var count=0;
-var tUniLocation=new Array();
+var tUniLocation=[];
 var tvAttLocation;
 var tvPosition;
 var tvIndex;
 var tprg;
 
-var attStride = new Array();
-var attLocation = new Array();
-var uniLocation = new Array();
+var attStride = [];
+var attLocation =[];
+var uniLocation = [];
 var VBOList;
 var iIndex;
 var fBuffer;
@@ -45,7 +46,7 @@ window.onload=function(){
 
 /*---------------shader背景側---------------------*/
 	tprg=create_program(gl,create_shader(gl,"tvs"),create_shader(gl,"tfs"));
-	run=(tprg!=null);
+	run=(tprg!==null);
 	if(!run){
 		eCheck.checked=false;
 	}
@@ -58,11 +59,11 @@ window.onload=function(){
 	1.0,1.0,0.0,
 	-1.0,-1.0,0.0,
 	1.0,-1.0,0.0,
-	]
+	];
 	var tIndex=[
 	0,2,1,
 	1,2,3
-	]
+	];
 	tvPosition=create_vbo(gl,tPosition);
 	tvIndex=create_ibo(gl,tIndex);
 	tvAttLocation=gl.getAttribLocation(tprg,"position");
@@ -165,7 +166,7 @@ window.onload=function(){
 
 	render();
 
-}
+};
 function render(){
 	if(!run){
 		return;

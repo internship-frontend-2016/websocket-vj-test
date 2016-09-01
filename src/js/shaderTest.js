@@ -1,9 +1,10 @@
+"use strict";
 var c,cw,ch,mx,my,gl,run,eCheck;
 var startTime;
 var time=0.0;
 var tempTime=0.0;
 var fps=1000/30;
-var uniLocation=new Array();
+var uniLocation=[];
 
 window.onload=function(){
 	c=document.getElementById("canvas");
@@ -20,7 +21,7 @@ window.onload=function(){
 	gl=c.getContext("webgl")||c.getContext("experimental-webgl");
 
 	var prg=create_program(gl,create_shader(gl,"vs"),create_shader(gl,"fs"));
-	run=(prg!=null);
+	run=(prg!==null);
 	if(!run){
 		eCheck.checked=false;
 	}
@@ -33,11 +34,11 @@ window.onload=function(){
 	1.0,1.0,0.0,
 	-1.0,-1.0,0.0,
 	1.0,-1.0,0.0,
-	]
+	];
 	var index=[
 	0,2,1,
 	1,2,3
-	]
+	];
 	var vPosition=create_vbo(gl,position);
 	var vIndex=create_ibo(gl,index);
 	var vAttLocation=gl.getAttribLocation(prg,"position");
@@ -52,7 +53,7 @@ window.onload=function(){
 
 	render();
 
-}
+};
 function render(){
 	if(!run){
 		return;

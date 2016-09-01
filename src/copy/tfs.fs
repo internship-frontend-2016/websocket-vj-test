@@ -2,7 +2,6 @@ precision mediump float;
 #define PI 3.14159265359
 uniform float time;
 uniform vec2 mouse;
-//uniform vec2 resolution;
 uniform vec2 iResolution;
 uniform vec4 hsv;
 const vec3 red=vec3(1.0,0.0,0.0);

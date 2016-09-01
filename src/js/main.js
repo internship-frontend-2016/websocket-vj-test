@@ -1,15 +1,16 @@
+"use strict";
 // テクスチャ用変数の宣言
-var texture=new Array();
+var texture=[];
 var mx,my,cw,ch;
 
-//フラグ
-var AppearBack=new Array();
-var DropFromUp=new Array();
+// //フラグ
+// var AppearBack=[];
+// var DropFromUp=[];
 
 window.resize=function(){
     cw=window.innerWidth;
     ch=window.innerHeight;
-}
+};
 window.onload=function(){
     // canvasエレメントを取得
     var c = document.getElementById('canvas');
@@ -30,7 +31,7 @@ window.onload=function(){
     // if(!run){
     //     eCheck.checked=false;
     // }
-    var tUniLocation=new Array();
+    var tUniLocation=[];
     tUniLocation[0]=gl.getUniformLocation(tprg,"time");
     tUniLocation[1]=gl.getUniformLocation(tprg,"mouse");
     tUniLocation[2]=gl.getUniformLocation(tprg,"iResolution");
@@ -40,11 +41,11 @@ window.onload=function(){
     1.0,1.0,0.0,
     -1.0,-1.0,0.0,
     1.0,-1.0,0.0,
-    ]
+    ];
     var tIndex=[
     0,2,1,
     1,2,3
-    ]
+    ];
     var tvPosition=create_vbo(gl,tPosition);
     var tvIndex=create_ibo(gl,tIndex);
     var tvAttLocation=gl.getAttribLocation(tprg,"position");
@@ -57,12 +58,12 @@ window.onload=function(){
     var prg = create_program(gl,v_shader, f_shader);
 
     // attributeLocationを配列に取得
-    var attLocation = new Array();
+    var attLocation = [];
     attLocation[0] = gl.getAttribLocation(prg, 'position');
     attLocation[1] = gl.getAttribLocation(prg, 'color');
     attLocation[2] = gl.getAttribLocation(prg, 'textureCoord');
     // attributeの要素数を配列に格納
-    var attStride = new Array();
+    var attStride = [];
     attStride[0] = 3;
     attStride[1] = 4;
     attStride[2] = 2;
@@ -100,11 +101,11 @@ window.onload=function(){
     var iIndex        = create_ibo(gl,index);
 
     // uniformLocationを配列に取得
-    var uniLocation = new Array();
+    var uniLocation = [];
     uniLocation[0]  = gl.getUniformLocation(prg, 'mvpMatrix');
     uniLocation[1]  = gl.getUniformLocation(prg, 'texture');
     // 各種行列の生成と初期化
-    var m = new matIV();
+    var m = [];
     var mMatrix   = m.identity(m.create());
     var vMatrix   = m.identity(m.create());
     var pMatrix   = m.identity(m.create());
@@ -121,11 +122,11 @@ window.onload=function(){
     gl.activeTexture(gl.TEXTURE0);
 
     //テクスチャのy座標
-    var posX=new Array();
+    var posX=[];
     //テクスチャのy座標
-    var posY=new Array();
+    var posY=[];
     //テクスチャのz座標
-    var posZ=new Array();
+    var posZ=[];
     //テクスチャ呼ばれたら
     var socket =io();
 
@@ -178,7 +179,7 @@ window.onload=function(){
     var fBuffer = create_framebuffer(gl,fBufferWidth, fBufferHeight);
     // カウンタの宣言
     var count = 0;
-    var count2=0;
+    // var count2=0;
     mx=0.5;my=0.5;
     var startTime=new Date().getTime();
     //ブレンドファンク

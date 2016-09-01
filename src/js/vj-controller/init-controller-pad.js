@@ -1,6 +1,7 @@
 var getTouchMapTransition=require("./get-touch-map-transition");
 module.exports=function(_w,_h,_canvas){
 	var socket=io();
+	var joFrag=false;
 	//var c=_canvas.getContext("2d");
 	//console.log(c);
 	var submitCanvas=document.getElementById("submitCanvas");
@@ -34,14 +35,35 @@ module.exports=function(_w,_h,_canvas){
 	},false);
 
 
-
-
-	function sentdata(){		
-		socket.emit("pushImageFromClient",{
-			imgdata:image,
-			x:normalPosX,
-			y:normalPosY
+	//隠しボタン
+	//スクリーンがリロードされたらjoさんのフラグがfalseになる
+	socket.on("pushJoFragFromServerToController",function(data){
+        console.log(data.joFrag);
+        joFrag=false;
+    });
+	document.getElementById("dontTouch_button").addEventListener("click",function(){
+		console.log("dontTouch_button_clicked");
+		joFrag=true;
+		socket.emit("pushJoFragFromClient",{
+			joFrag:true
 		});
+	},false);
+
+
+
+	function sentdata(){
+		if(!joFrag){
+			socket.emit("pushImageFromClient",{
+				imgdata:image,
+				x:normalPosX,
+				y:normalPosY
+			});
+		}else{
+			socket.emit("pushImageFromClient",{
+				x:normalPosX,
+				y:normalPosY
+			});
+		}
 	}
 	function createbase64(_canvas){
 		var data=_canvas.toDataURL("image/png");
