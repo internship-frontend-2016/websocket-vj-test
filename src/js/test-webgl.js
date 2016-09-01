@@ -24,7 +24,6 @@ window.onload = function(){
     document.addEventListener("keydown" , KeyDown);
     // webglコンテキストを取得
     var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-    
     // 頂点シェーダとフラグメントシェーダの生成
     var v_shader = create_shader('vs');
     var f_shader = create_shader('fs');

@@ -1,8 +1,18 @@
 'use strict';
 // テクスチャ用変数の宣言
 var texture=[];
+//球体背景のテクスチャ
+var sphereTexture=null;
+
+//マウスの位置、画像の大きさ、背景シェーダーに渡すもの
 var mx,my,cw,ch;
+//背景を切り替えるもの
 var select=1;
+//webglのいろんなものが入ってる
+var gl;
+//3番背景のときに背景を動かすときにつかう
+var sphereCountW=0;
+var sphereCountH=0;
 window.resize=function(){
     cw=window.innerWidth;
     ch=window.innerHeight;
@@ -21,15 +31,19 @@ window.onload=function(){
     //canvas上でマウスが動いたら
     c.addEventListener("mousemove",mouseMove,true);
     // webglコンテキストを取得
-    var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+    gl = c.getContext('webgl') || c.getContext('experimental-webgl');
 
     // 背景側の初期設定
     var backgroundData=initBackground(gl,"tvs","tfs");
 
     var intensiveData=initBackground(gl,"tvs","intensiveFs");
 
+    // 全体のプログラムオブジェクトの生成とリンク
+    //sphereSceneの初期設定
+    var inSphereData=initInSphere(gl);
     // 全体的の初期設定
     var overallData=initOverall(gl);
+
 
     // 各種行列の生成と初期化
     var m = new matIV();
@@ -39,7 +53,10 @@ window.onload=function(){
     var tmpMatrix = m.identity(m.create());
     var mvpMatrix = m.identity(m.create());
     // ビュー×プロジェクション座標変換行列
-    m.lookAt([0.0, 0.0, 5.0], [0, 0, 0], [0, 1, 0], vMatrix);
+    var eyePosition=[0.0, 0.0, 5.0];
+    var centerPosition=[0.0, 0.0, 0.0];
+    var upPosition=[0.0, 1.0, 0.0];
+    m.lookAt(eyePosition, centerPosition, upPosition, vMatrix);
     m.perspective(45, c.width / c.height, 0.1, 100, pMatrix);
     m.multiply(pMatrix, vMatrix, tmpMatrix);
     // 深度テストを有効にする
@@ -61,18 +78,18 @@ window.onload=function(){
 
     //サーバーからデータを受け取る
     socket.on("pushImageFromServer",function(data){
-            console.log(data);
-            if(joFrag){
-                create_texture(gl,"../img/joe.jpg",getnumber);
-            }else{
-                create_texture(gl,data.imgdata,getnumber);
-            }
-            posX[getnumber]=data.x*5.0;
-            posY[getnumber]=data.y*5.0;
-            posZ[getnumber]=0;
-            console.log(getnumber);
-            console.log(texture);
-            getnumber++;
+        console.log(data);
+        if(joFrag){
+            create_texture(gl,"../img/joe.jpg",getnumber);
+        }else{
+            create_texture(gl,data.imgdata,getnumber);
+        }
+        posX[getnumber]=data.x*5.0;
+        posY[getnumber]=data.y*5.0;
+        posZ[getnumber]=0;
+        console.log(getnumber);
+        console.log(texture);
+        getnumber++;
     });
     //joさんボタンを押したかどうかをチェック
     socket.on("pushJoFragFromServer",function(data){
@@ -85,6 +102,7 @@ window.onload=function(){
     socket.emit("pushJoFragFromScreen",{
             joFrag:false
     });
+
 
     // フレームバッファオブジェクトの取得
     var fBufferWidth  = cw;
@@ -118,8 +136,13 @@ window.onload=function(){
             bindBackground(gl,fBuffer,intensiveData,time,mx,my,cw,ch,hsv);
         }
 
-        //全体的に
-        bindOverall(gl,overallData,fBuffer,m,mMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,getnumber);
+        //全体的な
+        //shaderBackgroundの場合
+        if(select==1||select==2){
+            bindOverall(gl,overallData,fBuffer,m,mMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,getnumber);
+        }else if(select==3){
+            bindInSphere(c,gl,overallData,[0, 0, 0],[0, 1, 0],inSphereData,fBuffer,m,mMatrix,pMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,getnumber,sphereCountW,sphereCountH);
+        }
         // コンテキストの再描画
         gl.flush();
         //タブが非アクティブの場合はFPSを落とす
@@ -134,7 +157,26 @@ function KeyDown(e){
     }else if(e.keyCode==50){
         //2を押したら
         select=2;
+    }else if(e.keyCode==51){
+        select=3;
+        createSphereTexture(gl,"../img/test.jpg");
     }
+
+    //十字キー
+        if(e.keyCode==37){
+            //左
+            sphereCountW--;
+        }else if(e.keyCode==39){
+            //右
+            sphereCountW++;
+        }else if(e.keyCode==38){
+            //上
+            sphereCountH--;
+        }else if(e.keyCode==40){
+            //下
+            sphereCountH++;
+        }
+
 }
 function mouseMove(e){
     mx=e.offsetX/cw;
@@ -164,9 +206,19 @@ function initBackground(_gl,_vsId,_fsId){
 
     return{prg:prg,uniLocation:uniLocation,vPosition:vPosition,vIndex:vIndex,attLocation:vAttLocation};
 }
-function initOverall(_gl){
-    // プログラムオブジェクトの生成とリンク
-    var prg = create_program(_gl,create_shader(_gl,'vs'), create_shader(_gl,'fs'));
+function initInSphere(_gl){
+    var earthData     = sphere(64, 64, 1.0, [1.0, 1.0, 1.0, 1.0]);
+    var ePosition     = create_vbo(_gl,earthData.p);
+    var eColor        = create_vbo(_gl,earthData.c);
+    var eTextureCoord = create_vbo(_gl,earthData.t);
+    var eVBOList      = [ePosition,eColor, eTextureCoord];
+    var eIndex        = create_ibo(_gl,earthData.i);
+
+    return {VBOList:eVBOList,iIndex:eIndex,index:earthData.i}
+}
+function initOverall(_gl,){
+    // // プログラムオブジェクトの生成とリンク
+     var prg = create_program(_gl,create_shader(_gl,'vs'), create_shader(_gl,'fs'));
 
     // attributeLocationを配列に取得
     var attLocation = [];
@@ -281,6 +333,100 @@ function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix
             _getnumber--;
         }
         bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i]);
+       }
+   }
+}
+function bindInSphere(_c,_gl,_overallData,_centerPosition,_upPosition,_inSphereData,_fBuffer,_m,_mMatrix,_pMatrix,_tmpMatrix,_mvpMatrix,_rad,_texture,_posX,_posY,_posZ,_getnumber,_sphereCountW,_sphereCountH){
+     var radW = (_sphereCountW % 360) * Math.PI / 180;
+     var radH = (_sphereCountH % 360) * Math.PI / 180;
+
+     // var radW = 0;
+     // var radH = 0;
+
+
+    var m = new matIV();
+    var mMatrix   = m.identity(m.create());
+    var vMatrix   = m.identity(m.create());
+    var pMatrix   = m.identity(m.create());
+    var tmpMatrix = m.identity(m.create());
+    var mvpMatrix = m.identity(m.create());
+    // ビュー×プロジェクション座標変換行列
+    var eyePosition=[0.0, 0.0, 5.0];
+    var centerPosition=[0.0, 0.0, 0.0];
+    var upPosition=[0.0, 1.0, 0.0];
+    //m.lookAt(eyePosition, centerPosition, upPosition, vMatrix);
+    m.perspective(45, _c.width / _c.height, 0.1, 100, pMatrix);
+    m.multiply(pMatrix, vMatrix, tmpMatrix);
+
+/*------------------カメラを回転させているけど、まだカメラの向きがいまいち-----------------------------*/
+    centerPosition=[eyePosition[0]+Math.cos(radW)*5.0,eyePosition[1]+Math.sin(radH)*5.0,eyePosition[2]+Math.sin(radW)*5.0];
+console.log(centerPosition);
+    // ビュー×プロジェクション座標変換行列
+    m.lookAt(eyePosition, centerPosition, upPosition, vMatrix);
+
+    m.multiply(pMatrix, vMatrix, tmpMatrix);
+
+
+    // canvasを初期化
+    _gl.clearColor(0.0,0.0,0.0,1.0);
+    _gl.clearDepth(1.0);
+    _gl.clear(_gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT);
+
+    _gl.useProgram(_overallData.prg);
+    // ブレンディングを無効にする
+    _gl.disable(_gl.BLEND);
+    // VBOとIBOの登録
+    set_attribute(_gl,_inSphereData.VBOList, _overallData.attLocation, _overallData.attStride);
+    _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, _inSphereData.iIndex);
+    /*移動、回転、拡大縮小*/
+/*
+    _m.identity(_mMatrix);
+    //_m.translate(_mMatrix,[0.0,0.0,5.0],_mMatrix);
+    _m.rotate(_mMatrix, 180, [1, 0, 0], _mMatrix);
+
+    // _m.rotate(_mMatrix, radH, [1, 0, 0], _mMatrix);
+    // _m.rotate(_mMatrix, radW, [0, 1, 0], _mMatrix);
+    _m.scale(_mMatrix,[2.0,2.0,2.0],_mMatrix);
+    _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
+*/
+    m.identity(mMatrix);
+    //m.translate(mMatrix,[0.0,0.0,5.0],mMatrix);
+    m.rotate(mMatrix, 180, [1, 0, 0], mMatrix);
+
+    // _m.rotate(_mMatrix, radH, [1, 0, 0], _mMatrix);
+    // _m.rotate(_mMatrix, radW, [0, 1, 0], _mMatrix);
+    //m.scale(mMatrix,[10.0,10.0,10.0],mMatrix);
+    m.multiply(tmpMatrix, mMatrix, mvpMatrix);
+    //uniformを登録
+    _gl.bindTexture(_gl.TEXTURE_2D,sphereTexture);
+    _gl.uniform1i(_overallData.uniLocation[1], 0);
+    // _gl.uniformMatrix4fv(_overallData.uniLocation[0], false, _mvpMatrix);
+
+    _gl.uniformMatrix4fv(_overallData.uniLocation[0], false, mvpMatrix);
+
+    _gl.drawElements(_gl.TRIANGLES, _inSphereData.index.length, _gl.UNSIGNED_SHORT, 0);
+
+
+    // VBOとIBOの登録
+    set_attribute(_gl,_overallData.VBOList, _overallData.attLocation, _overallData.attStride);
+    _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, _overallData.iIndex);
+    _gl.enable(_gl.BLEND);
+   if(_texture){
+       for(var i=0;i<_texture.length;i++){
+        //_posZ[i]-=0.40;
+        //_posY[i]=3.0;
+        _posZ[i]=4.5;
+        //console.log("posY[i]"+_posY[i]);
+        if(_posZ[i]<-100){
+            // カメラより前にすすんだら、配列を減らす処理が微妙
+            console.log("削除してます");
+            _texture.shift();
+            _posX.shift();
+            _posY.shift();
+            _posZ.shift();
+            _getnumber--;
+        }
+        bindPlatePoly(_gl,_m,mMatrix,_rad,tmpMatrix,mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i]);
        }
    }
 
@@ -449,7 +595,40 @@ function create_texture(_gl,_source,_n){
         _gl.bindTexture(_gl.TEXTURE_2D, null);
         
         // 生成したテクスチャをグローバル変数に代入
-        texture[_n] = tex;
+            texture[_n] = tex;
+    };
+    
+    // イメージオブジェクトのソースを指定
+    img.src = _source;
+}
+// テクスチャを生成する関数
+function createSphereTexture(_gl,_source){
+    // イメージオブジェクトの生成
+    var img = new Image();
+    
+    // データのオンロードをトリガーにする
+    img.onload = function(){
+        // テクスチャオブジェクトの生成
+        var tex = _gl.createTexture();
+        
+        // テクスチャをバインドする
+        _gl.bindTexture(_gl.TEXTURE_2D, tex);
+        
+        // テクスチャへイメージを適用
+        _gl.texImage2D(_gl.TEXTURE_2D, 0, _gl.RGBA, _gl.RGBA, _gl.UNSIGNED_BYTE, img);
+        _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_MAG_FILTER,_gl.LINEAR);
+        _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_MIN_FILTER,_gl.LINEAR);
+        _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_WRAP_S,_gl.CLAMP_TO_EDGE);
+        _gl.texParameteri(_gl.TEXTURE_2D,_gl.TEXTURE_WRAP_T,_gl.CLAMP_TO_EDGE);
+
+        // ミップマップを生成
+        _gl.generateMipmap(_gl.TEXTURE_2D);
+        
+        // テクスチャのバインドを無効化
+        _gl.bindTexture(_gl.TEXTURE_2D, null);
+        
+        // 生成したテクスチャをグローバル変数に代入
+            sphereTexture = tex;
     };
     
     // イメージオブジェクトのソースを指定
