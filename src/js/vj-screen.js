@@ -98,8 +98,8 @@ window.onload=function(){
 
     //サーバーからデータを受け取る
     socket.on("pushImageFromServer",function(data){
-        console.log(data);
-        console.log("data.frag"+data.frag);
+        // console.log(data);
+        // console.log("data.frag"+data.frag);
         //真ん中のボタンを押したかどうか
         if(data.frag==true){
             if(joFrag){
@@ -128,14 +128,14 @@ window.onload=function(){
         if(select==3){
             posX[getnumber]=data.x*5.0;
             posY[getnumber]=-5.0;
-            posZ[getnumber]=data.y*2.0+5.0;
+            posZ[getnumber]=data.y*5.0+5.0;
         }
-        console.log(getnumber);
-        console.log(texture);
+        // console.log(getnumber);
+        // console.log(texture);
     });
     //joさんボタンを押したかどうかをチェック
     socket.on("pushJoFragFromServer",function(data){
-        console.log(data.joFrag);
+        // console.log(data.joFrag);
         if(data.joFrag===true){
             joFrag=true;
         }
@@ -237,7 +237,7 @@ function KeyDown(e){
 }
 
 function Keyup(e){
-    console.log(e);
+    // console.log(e);
     blurFrag=false;
 }
 function mouseMove(e){
@@ -408,7 +408,7 @@ function bindZoomblur(_gl,_zoomblurData,_fBuffer,_cw,_ch,_blurFrag){
     m.ortho(-1.0, 1.0, 1.0, - 1.0, 0.1, 1, pMatrix);
     m.multiply(pMatrix, vMatrix, tmpMatrix);
   //  var strength
-    console.log(_blurFrag);
+    // console.log(_blurFrag);
     if(!_blurFrag){
 //        strength = 20;
         blurValue-=0.1;
@@ -462,7 +462,7 @@ function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix
         _posZ[i]-=0.40;
         if(_posZ[i]<-90){
             // カメラより前にすすんだら、配列を減らす処理が微妙
-            console.log("削除してます");
+            // console.log("削除してます");
             _texture.shift();
             _posX.shift();
             _posY.shift();
@@ -478,7 +478,7 @@ function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix
        for(var i=0;i<_textureM.length;i++){
         _posZm[i]+=1.0;
         if(_posZm[i]>10){
-            console.log("削除してます");
+            // console.log("削除してます");
             _textureM.shift();
             _posXm.shift();
             _posYm.shift();
@@ -568,7 +568,7 @@ _gl.bindFramebuffer(_gl.FRAMEBUFFER,_fBuffer.f);
         _posY[i]+=0.1;
         if(_posZ[i]<-90){
             // カメラより前にすすんだら、配列を減らす処理が微妙
-            console.log("削除してます");
+            // console.log("削除してます");
             _texture.shift();
             _posX.shift();
             _posY.shift();
@@ -582,7 +582,7 @@ _gl.bindFramebuffer(_gl.FRAMEBUFFER,_fBuffer.f);
        for(var i=0;i<_textureM.length;i++){
         _posZm[i]+=1.0;
         if(_posZm[i]>10){
-            console.log("削除してます");
+            // console.log("削除してます");
             _textureM.shift();
             _posXm.shift();
             _posYm.shift();
@@ -788,10 +788,10 @@ function create_texture(_gl,_source,_n,_frag){
         
         // 生成したテクスチャをグローバル変数に代入
         if(_frag){
-            console.log("create_textureM");
+            // console.log("create_textureM");
             textureM[_n] = tex;
         }else{
-            console.log("create_texture");
+            // console.log("create_texture");
             texture[_n] = tex;
         }
     };
