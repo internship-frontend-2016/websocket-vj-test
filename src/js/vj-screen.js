@@ -1,6 +1,8 @@
 //'use strict';
 // テクスチャ用変数の宣言
 var texture=[];
+
+var textureM=[];
 //球体背景のテクスチャ
 var sphereTexture=null;
 
@@ -90,38 +92,46 @@ window.onload=function(){
 
     //socketのイベントが何回きたかしらべる
     var getnumber=0;
-
+    var getnumberM=0;
     var joFrag=false;
 
 
     //サーバーからデータを受け取る
     socket.on("pushImageFromServer",function(data){
         console.log(data);
-        if(joFrag){
-            create_texture(gl,"../img/joe.jpg",getnumber);
-        }else{
-            create_texture(gl,data.imgdata,getnumber);
-        }
         console.log("data.frag"+data.frag);
         //真ん中のボタンを押したかどうか
         if(data.frag==true){
-            posXm[getnumber]=0;
-            posYm[getnumber]=0;
-            posZm[getnumber]=-95;
+            if(joFrag){
+                 create_texture(gl,"../img/joe.jpg",getnumberM,true);
+            }else{
+                create_texture(gl,data.imgdata,getnumberM,true);
+            }
+            posXm[getnumberM]=0;
+            posYm[getnumberM]=0;
+            posZm[getnumberM]=-95;
+            getnumberM++;
         }else{
+
+            if(joFrag){
+                 create_texture(gl,"../img/joe.jpg",getnumber,false);
+            }else{
+                create_texture(gl,data.imgdata,getnumber,false);
+            }
+
             posX[getnumber]=data.x*5.0;
             posY[getnumber]=data.y*5.0;
             posZ[getnumber]=0;
+            getnumber++;
         }
         //select
         if(select==3){
             posX[getnumber]=data.x*5.0;
-            posY[getnumber]=5.0;
-            posZ[getnumber]=data.y;
+            posY[getnumber]=-5.0;
+            posZ[getnumber]=data.y*2.0+5.0;
         }
         console.log(getnumber);
         console.log(texture);
-        getnumber++;
     });
     //joさんボタンを押したかどうかをチェック
     socket.on("pushJoFragFromServer",function(data){
@@ -172,9 +182,9 @@ window.onload=function(){
         //全体的な
         //shaderBackgroundの場合
         if(select==1||select==2){
-            bindOverall(gl,overallData,fBuffer,m,mMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber);
+            bindOverall(gl,overallData,fBuffer,m,mMatrix,tmpMatrix,mvpMatrix,rad,texture,textureM,posX,posY,posZ,posXm,posYm,posZm,getnumber,getnumberM);
         }else if(select==3){
-            bindInSphere(c,gl,fBuffer,overallData,inSphereData,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber,sphereCountW,sphereCountH);
+            bindInSphere(c,gl,fBuffer,overallData,inSphereData,texture,textureM,posX,posY,posZ,posXm,posYm,posZm,getnumber,getnumberM,sphereCountW,sphereCountH);
             bindZoomblur(gl,zoomblurData,fBuffer,cw,ch,blurFrag);
         }
         // コンテキストの再描画
@@ -193,7 +203,8 @@ function KeyDown(e){
         select=2;
     }else if(e.keyCode==51){
         select=3;
-        createSphereTexture(gl,"../img/test.jpg");
+//        createSphereTexture(gl,"../img/test.jpg");
+        createSphereTexture(gl,"../img/logo.png");
     }
 
     //十字キー
@@ -218,7 +229,7 @@ function KeyDown(e){
     }
 
     if(blurFrag){
-        blurValue+=1.0;
+        blurValue+=0.02;
     }
     if(blurValue>=30.0){
         blurValue=30.0;
@@ -400,7 +411,7 @@ function bindZoomblur(_gl,_zoomblurData,_fBuffer,_cw,_ch,_blurFrag){
     console.log(_blurFrag);
     if(!_blurFrag){
 //        strength = 20;
-        blurValue-=0.05;
+        blurValue-=0.1;
         if(blurValue<=0){
             blurValue=0;
         }
@@ -418,7 +429,7 @@ function bindZoomblur(_gl,_zoomblurData,_fBuffer,_cw,_ch,_blurFrag){
     _gl.drawElements(_gl.TRIANGLES, _zoomblurData.index.length, _gl.UNSIGNED_SHORT, 0);
 
 }
-function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_rad,_texture,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_getnumber){
+function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_rad,_texture,_textureM,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_getnumber,_getnumberM){
     // canvasを初期化
     _gl.clearColor(0.0,0.0,0.0,1.0);
     _gl.clearDepth(1.0);
@@ -448,30 +459,39 @@ function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix
     _gl.enable(_gl.BLEND);
    if(_texture){
        for(var i=0;i<_texture.length;i++){
-
         _posZ[i]-=0.40;
-        _posZm[i]+=1.0;
-        if(_posZ[i]<-100){
+        if(_posZ[i]<-90){
             // カメラより前にすすんだら、配列を減らす処理が微妙
             console.log("削除してます");
             _texture.shift();
             _posX.shift();
             _posY.shift();
             _posZ.shift();
-            _getnumber--;
-        }else if(_posZm[i]>10){
+           _getnumber--;
+//getnumber--
+//console.log("bindしている"+getnumber);
+        }
+        bindPlatePoly(_gl,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i],false);
+       }
+   }
+   if(_textureM){
+       for(var i=0;i<_textureM.length;i++){
+        _posZm[i]+=1.0;
+        if(_posZm[i]>10){
             console.log("削除してます");
-            _texture.shift();
+            _textureM.shift();
             _posXm.shift();
             _posYm.shift();
             _posZm.shift();
-            _getnumber--;
+           _getnumberM--;
+  //          getnumberM--;
+//console.log("bindしている"+getnumberM);
         }
-        bindPlatePoly(_gl,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i],_posXm[i],_posYm[i],_posZm[i],false);
-        }
+        bindPlatePolyMiddle(_gl,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_overallData.uniLocation,i,_posXm[i],_posYm[i],_posZm[i],false);
+       }
    }
 }
-function bindInSphere(_c,_gl,_fBuffer,_overallData,_inSphereData,_texture,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_getnumber,_sphereCountW,_sphereCountH){
+function bindInSphere(_c,_gl,_fBuffer,_overallData,_inSphereData,_texture,_textureM,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_getnumber,_getnumberM,_sphereCountW,_sphereCountH){
     var radW = (_sphereCountW % 360) * Math.PI / 180;
     var radH = (_sphereCountH % 360) * Math.PI / 180;
     var m = new matIV();
@@ -545,10 +565,8 @@ _gl.bindFramebuffer(_gl.FRAMEBUFFER,_fBuffer.f);
     _gl.enable(_gl.BLEND);
    if(_texture){
        for(var i=0;i<_texture.length;i++){
-        _posY[i]-=0.1;
-        // _posZ[i]-=0.40;
-        _posZm[i]+=1.0;
-        if(_posZ[i]<-100){
+        _posY[i]+=0.1;
+        if(_posZ[i]<-90){
             // カメラより前にすすんだら、配列を減らす処理が微妙
             console.log("削除してます");
             _texture.shift();
@@ -556,27 +574,37 @@ _gl.bindFramebuffer(_gl.FRAMEBUFFER,_fBuffer.f);
             _posY.shift();
             _posZ.shift();
             _getnumber--;
-        }else if(_posZm[i]>10){
+        }
+        bindPlatePoly(_gl,m,mMatrix,tmpMatrix,mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i],true);
+       }
+   }
+   if(_textureM){
+       for(var i=0;i<_textureM.length;i++){
+        _posZm[i]+=1.0;
+        if(_posZm[i]>10){
             console.log("削除してます");
-            _texture.shift();
+            _textureM.shift();
             _posXm.shift();
             _posYm.shift();
             _posZm.shift();
-            _getnumber--;
+            _getnumberM--;
         }
-        bindPlatePoly(_gl,m,mMatrix,tmpMatrix,mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i],_posXm[i],_posYm[i],_posZm[i],true);
+        bindPlatePolyMiddle(_gl,m,mMatrix,tmpMatrix,mvpMatrix,_overallData.uniLocation,i,_posXm[i],_posYm[i],_posZm[i],true);
        }
    }
 
 _gl.bindFramebuffer(_gl.FRAMEBUFFER,null);
 
 }
-function bindPlatePoly(_gl,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_uniLocation,_number,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_scaleFrag){
+
+//texture系を引数にとってないでグローバルのをつかってる
+function bindPlatePoly(_gl,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_uniLocation,_number,_posX,_posY,_posZ,_scaleFrag){
     // モデル座標変換行列の生成
     _m.identity(_mMatrix);
     _m.translate(_mMatrix,[_posX,_posY,_posZ],_mMatrix);
     if(_scaleFrag){
-        _m.scale(_mMatrix,[0.5,0.5,0.5],_mMatrix);
+        _m.rotate(_mMatrix,Math.PI,[1,0,0],_mMatrix);
+        _m.scale(_mMatrix,[0.3,0.3,0.3],_mMatrix);
     }
     _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
     
@@ -590,15 +618,20 @@ function bindPlatePoly(_gl,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_uniLocation,_numbe
     _gl.uniformMatrix4fv(_uniLocation[0], false, _mvpMatrix);
     _gl.drawElements(_gl.TRIANGLES, 6, _gl.UNSIGNED_SHORT, 0);
 
+    
+}
+//真ん中のテクスチャをしようする
+function bindPlatePolyMiddle(_gl,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_uniLocation,_number,_posXm,_posYm,_posZm,_scaleFrag){
     _m.identity(_mMatrix);
     _m.translate(_mMatrix,[_posXm,_posYm,_posZm],_mMatrix);
     if(_scaleFrag){
-        _m.scale(_mMatrix,[0.5,0.5,0.5],_mMatrix);
+        _m.rotate(_mMatrix,Math.PI,[1,0,0],_mMatrix);
+        _m.scale(_mMatrix,[0.3,0.3,0.3],_mMatrix);
     }
     _m.multiply(_tmpMatrix, _mMatrix, _mvpMatrix);
     
     // テクスチャをバインドする
-    _gl.bindTexture(_gl.TEXTURE_2D, texture[_number]);
+    _gl.bindTexture(_gl.TEXTURE_2D, textureM[_number]);
     
     // uniform変数にテクスチャを登録
    _gl.uniform1i(_uniLocation[1], 0);
@@ -606,9 +639,8 @@ function bindPlatePoly(_gl,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_uniLocation,_numbe
     // uniform変数の登録と描画
     _gl.uniformMatrix4fv(_uniLocation[0], false, _mvpMatrix);
     _gl.drawElements(_gl.TRIANGLES, 6, _gl.UNSIGNED_SHORT, 0);
-    
-}
 
+}
 // シェーダを生成する関数
 function create_shader(_gl,_id){
     // シェーダを格納する変数
@@ -729,7 +761,7 @@ function create_ibo(_gl,_data){
 }
 
 // テクスチャを生成する関数
-function create_texture(_gl,_source,_n){
+function create_texture(_gl,_source,_n,_frag){
     // イメージオブジェクトの生成
     var img = new Image();
     
@@ -755,7 +787,13 @@ function create_texture(_gl,_source,_n){
         _gl.bindTexture(_gl.TEXTURE_2D, null);
         
         // 生成したテクスチャをグローバル変数に代入
+        if(_frag){
+            console.log("create_textureM");
+            textureM[_n] = tex;
+        }else{
+            console.log("create_texture");
             texture[_n] = tex;
+        }
     };
     
     // イメージオブジェクトのソースを指定
