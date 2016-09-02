@@ -41,8 +41,6 @@ Node.js: v4.5.0
 * browserify        （ jsファイルを統合 )
 * js-hint           （ jsファイルのチェック )
 * BrowserSync       （ ローカルサーバーを起動 )
-* gulp.spritesmith  （ スプライト画像を作成 )
-
 
 ## インストール
 ```
@@ -53,6 +51,14 @@ Node.js: v4.5.0
 ```
 >gulp
 ```
+
+###本番向けビルド（buildディレクトリから不要なファイルを削除して、jsファイルをminifyする）
+```
+>npm run build
+```
+
+
+
 ###Node.jsでwebsocket用のサーバーを立てる
 ```
 >node index.js

@@ -13,6 +13,11 @@ var gl;
 //3番背景のときに背景を動かすときにつかう
 var sphereCountW=0;
 var sphereCountH=0;
+
+//blurするかしないか
+var blurFrag=false;
+var blurValue=0;
+
 window.resize=function(){
     cw=window.innerWidth;
     ch=window.innerHeight;
@@ -28,6 +33,7 @@ window.onload=function(){
 
     //キーが押されたら
     document.addEventListener("keydown" , KeyDown);
+    document.addEventListener("keyup" , Keyup);
     //canvas上でマウスが動いたら
     c.addEventListener("mousemove",mouseMove,true);
     // webglコンテキストを取得
@@ -82,8 +88,6 @@ window.onload=function(){
     //テクスチャのz座標
     var posZm=[];
 
-
-
     //socketのイベントが何回きたかしらべる
     var getnumber=0;
 
@@ -109,8 +113,6 @@ window.onload=function(){
             posY[getnumber]=data.y*5.0;
             posZ[getnumber]=0;
         }
-
-
         //select
         if(select==3){
             posX[getnumber]=data.x*5.0;
@@ -172,10 +174,8 @@ window.onload=function(){
         if(select==1||select==2){
             bindOverall(gl,overallData,fBuffer,m,mMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber);
         }else if(select==3){
-            //bindInSphere(c,gl,fBuffer,overallData,inSphereData,fBuffer,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber,sphereCountW,sphereCountH);
             bindInSphere(c,gl,fBuffer,overallData,inSphereData,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber,sphereCountW,sphereCountH);
-//            bindInSphere(c,gl,fBuffer,overallData,centerPosition,upPosition,inSphereData,fBuffer,m,mMatrix,pMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber,sphereCountW,sphereCountH);
-            bindZoomblur(gl,zoomblurData,fBuffer);
+            bindZoomblur(gl,zoomblurData,fBuffer,cw,ch,blurFrag);
         }
         // コンテキストの再描画
         gl.flush();
@@ -197,20 +197,37 @@ function KeyDown(e){
     }
 
     //十字キー
-        if(e.keyCode==37){
-            //左
-            sphereCountW++;
-        }else if(e.keyCode==39){
-            //右
-            sphereCountW--;
-        }else if(e.keyCode==38){
-            //上
-            sphereCountH--;
-        }else if(e.keyCode==40){
-            //下
-            sphereCountH++;
-        }
+    if(e.keyCode==37){
+        //左
+        blurFrag=true;
+        sphereCountW--;
+    }else if(e.keyCode==39){
+        //右
+        blurFrag=true;
+        sphereCountW++;
+    }else if(e.keyCode==38){
+        //上
+        blurFrag=true;
+        sphereCountH++;
+    }else if(e.keyCode==40){
+        //下
+        blurFrag=true;
+        sphereCountH--;
+    }else{
+        blurFrag=false;
+    }
 
+    if(blurFrag){
+        blurValue+=1.0;
+    }
+    if(blurValue>=30.0){
+        blurValue=30.0;
+    }
+}
+
+function Keyup(e){
+    console.log(e);
+    blurFrag=false;
 }
 function mouseMove(e){
     mx=e.offsetX/cw;
@@ -262,6 +279,8 @@ function initZoomBlur(_gl,_vsId,_fsId){
     uniLocation[0] = _gl.getUniformLocation(prg, 'mvpMatrix');
     uniLocation[1] = _gl.getUniformLocation(prg, 'texture');
     uniLocation[2] = _gl.getUniformLocation(prg, 'strength');
+    uniLocation[3] = _gl.getUniformLocation(prg, 'width');
+    uniLocation[4] = _gl.getUniformLocation(prg, 'height');
     // 板ポリゴン
     var position = [-1.0, 1.0, 0.0,
     1.0, 1.0, 0.0, - 1.0, - 1.0, 0.0,
@@ -358,7 +377,7 @@ function bindBackground(_gl,_fBuffer,_backgroundData,_time,_mx,_my,_cw,_ch,_hsv)
     _gl.bindFramebuffer(_gl.FRAMEBUFFER,null);
 
 }
-function bindZoomblur(_gl,_zoomblurData,_fBuffer){
+function bindZoomblur(_gl,_zoomblurData,_fBuffer,_cw,_ch,_blurFrag){
 /*頑張って書き換える*/
     var m = new matIV();
     var mMatrix   = m.identity(m.create());
@@ -377,15 +396,25 @@ function bindZoomblur(_gl,_zoomblurData,_fBuffer){
     m.lookAt([0.0, 0.0, 0.5], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], vMatrix);
     m.ortho(-1.0, 1.0, 1.0, - 1.0, 0.1, 1, pMatrix);
     m.multiply(pMatrix, vMatrix, tmpMatrix);
+  //  var strength
+    console.log(_blurFrag);
+    if(!_blurFrag){
+//        strength = 20;
+        blurValue-=0.05;
+        if(blurValue<=0){
+            blurValue=0;
+        }
+    }
 
-    var strength = 10;
      _gl.activeTexture(_gl.TEXTURE0);
      _gl.bindTexture(_gl.TEXTURE_2D, _fBuffer.t);
      set_attribute(_gl,_zoomblurData.VBOList, _zoomblurData.attLocation, _zoomblurData.attStride);
     _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, _zoomblurData.iIndex);
     _gl.uniformMatrix4fv(_zoomblurData.uniLocation[0], false, tmpMatrix);
     _gl.uniform1i(_zoomblurData.uniLocation[1], 0);
-    _gl.uniform1f(_zoomblurData.uniLocation[2], strength);
+    _gl.uniform1f(_zoomblurData.uniLocation[2], blurValue);
+    _gl.uniform1f(_zoomblurData.uniLocation[3], _cw);
+    _gl.uniform1f(_zoomblurData.uniLocation[4], _ch);
     _gl.drawElements(_gl.TRIANGLES, _zoomblurData.index.length, _gl.UNSIGNED_SHORT, 0);
 
 }

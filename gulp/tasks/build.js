@@ -18,6 +18,6 @@ gulp.task('build', function() {
     return runSequence(
         'outLog',
         'clean',
-        ['imgCopy', 'ejs', 'sass', 'browserify-prod']
+        ['imgCopy', 'ejs', 'sass', 'browserify-prod','js-lib-concat']
     );
 });
