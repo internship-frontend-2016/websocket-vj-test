@@ -1,4 +1,4 @@
-'use strict';
+//'use strict';
 // テクスチャ用変数の宣言
 var texture=[];
 //球体背景のテクスチャ
@@ -37,10 +37,13 @@ window.onload=function(){
     var backgroundData=initBackground(gl,"tvs","tfs");
 
     var intensiveData=initBackground(gl,"tvs","intensiveFs");
-
     // 全体のプログラムオブジェクトの生成とリンク
     //sphereSceneの初期設定
     var inSphereData=initInSphere(gl);
+
+    //zoomblurを適用する
+    var zoomblurData=initZoomBlur(gl,"zoom.vs","zoom.fs");
+
     // 全体的の初期設定
     var overallData=initOverall(gl);
 
@@ -144,7 +147,7 @@ window.onload=function(){
 
     //ブレンドファンクしてるぞ
     gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-    
+
     // 恒常ループ
     (function loop(){
         // カウンタを元にラジアンを算出
@@ -169,8 +172,10 @@ window.onload=function(){
         if(select==1||select==2){
             bindOverall(gl,overallData,fBuffer,m,mMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber);
         }else if(select==3){
-            // bindInSphere(c,gl,overallData,[0, 0, 0],[0, 1, 0],inSphereData,fBuffer,m,mMatrix,pMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,getnumber,sphereCountW,sphereCountH);
-            bindInSphere(c,gl,overallData,centerPosition,upPosition,inSphereData,fBuffer,m,mMatrix,pMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber,sphereCountW,sphereCountH);
+            //bindInSphere(c,gl,fBuffer,overallData,inSphereData,fBuffer,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber,sphereCountW,sphereCountH);
+            bindInSphere(c,gl,fBuffer,overallData,inSphereData,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber,sphereCountW,sphereCountH);
+//            bindInSphere(c,gl,fBuffer,overallData,centerPosition,upPosition,inSphereData,fBuffer,m,mMatrix,pMatrix,tmpMatrix,mvpMatrix,rad,texture,posX,posY,posZ,posXm,posYm,posZm,getnumber,sphereCountW,sphereCountH);
+            bindZoomblur(gl,zoomblurData,fBuffer);
         }
         // コンテキストの再描画
         gl.flush();
@@ -244,6 +249,37 @@ function initInSphere(_gl){
     var eIndex        = create_ibo(_gl,earthData.i);
 
     return {VBOList:eVBOList,iIndex:eIndex,index:earthData.i}
+}
+function initZoomBlur(_gl,_vsId,_fsId){
+    var prg = create_program(_gl,create_shader(_gl,_vsId),create_shader(_gl,_fsId));
+    var attLocation = [];
+    attLocation[0] = _gl.getAttribLocation(prg, 'position');
+    attLocation[1] = _gl.getAttribLocation(prg, 'texCoord');
+    var attStride = new Array();
+    attStride[0] = 3;
+    attStride[1] = 2;
+    var uniLocation = [];
+    uniLocation[0] = _gl.getUniformLocation(prg, 'mvpMatrix');
+    uniLocation[1] = _gl.getUniformLocation(prg, 'texture');
+    uniLocation[2] = _gl.getUniformLocation(prg, 'strength');
+    // 板ポリゴン
+    var position = [-1.0, 1.0, 0.0,
+    1.0, 1.0, 0.0, - 1.0, - 1.0, 0.0,
+    1.0, - 1.0, 0.0];
+    var texCoord = [
+    0.0, 0.0,
+    1.0, 0.0,
+    0.0, 1.0,
+    1.0, 1.0];
+    var index = [
+    0, 2, 1,
+    2, 3, 1];
+    var vPosition = create_vbo(_gl,position);
+    var vTexCoord = create_vbo(_gl,texCoord);
+    var vVBOList = [vPosition, vTexCoord];
+    var iIndex = create_ibo(_gl,index);
+
+    return{prg:prg, attLocation:attLocation, attStride:attStride,uniLocation:uniLocation ,VBOList:vVBOList, index:index, iIndex:iIndex}
 }
 function initOverall(_gl,){
     // // プログラムオブジェクトの生成とリンク
@@ -322,7 +358,38 @@ function bindBackground(_gl,_fBuffer,_backgroundData,_time,_mx,_my,_cw,_ch,_hsv)
     _gl.bindFramebuffer(_gl.FRAMEBUFFER,null);
 
 }
-function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_rad,_texture,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_getnumber,){
+function bindZoomblur(_gl,_zoomblurData,_fBuffer){
+/*頑張って書き換える*/
+    var m = new matIV();
+    var mMatrix   = m.identity(m.create());
+    var vMatrix   = m.identity(m.create());
+    var pMatrix   = m.identity(m.create());
+    var tmpMatrix = m.identity(m.create());
+    var mvpMatrix = m.identity(m.create());
+    // プログラムオブジェクトの選択
+    _gl.useProgram(_zoomblurData.prg);
+
+    _gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    _gl.clearDepth(1.0);
+    _gl.clear(_gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT);
+
+    // 正射影用の座標変換行列
+    m.lookAt([0.0, 0.0, 0.5], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], vMatrix);
+    m.ortho(-1.0, 1.0, 1.0, - 1.0, 0.1, 1, pMatrix);
+    m.multiply(pMatrix, vMatrix, tmpMatrix);
+
+    var strength = 10;
+     _gl.activeTexture(_gl.TEXTURE0);
+     _gl.bindTexture(_gl.TEXTURE_2D, _fBuffer.t);
+     set_attribute(_gl,_zoomblurData.VBOList, _zoomblurData.attLocation, _zoomblurData.attStride);
+    _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, _zoomblurData.iIndex);
+    _gl.uniformMatrix4fv(_zoomblurData.uniLocation[0], false, tmpMatrix);
+    _gl.uniform1i(_zoomblurData.uniLocation[1], 0);
+    _gl.uniform1f(_zoomblurData.uniLocation[2], strength);
+    _gl.drawElements(_gl.TRIANGLES, _zoomblurData.index.length, _gl.UNSIGNED_SHORT, 0);
+
+}
+function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_rad,_texture,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_getnumber){
     // canvasを初期化
     _gl.clearColor(0.0,0.0,0.0,1.0);
     _gl.clearDepth(1.0);
@@ -371,18 +438,13 @@ function bindOverall(_gl,_overallData,_fBuffer,_m,_mMatrix,_tmpMatrix,_mvpMatrix
             _posZm.shift();
             _getnumber--;
         }
-        bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i],_posXm[i],_posYm[i],_posZm[i],false);
-       }
+        bindPlatePoly(_gl,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i],_posXm[i],_posYm[i],_posZm[i],false);
+        }
    }
 }
-function bindInSphere(_c,_gl,_overallData,_centerPosition,_upPosition,_inSphereData,_fBuffer,_m,_mMatrix,_pMatrix,_tmpMatrix,_mvpMatrix,_rad,_texture,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_getnumber,_sphereCountW,_sphereCountH){
-     var radW = (_sphereCountW % 360) * Math.PI / 180;
-     var radH = (_sphereCountH % 360) * Math.PI / 180;
-
-     // var radW = 0;
-     // var radH = 0;
-
-
+function bindInSphere(_c,_gl,_fBuffer,_overallData,_inSphereData,_texture,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_getnumber,_sphereCountW,_sphereCountH){
+    var radW = (_sphereCountW % 360) * Math.PI / 180;
+    var radH = (_sphereCountH % 360) * Math.PI / 180;
     var m = new matIV();
     var mMatrix   = m.identity(m.create());
     var vMatrix   = m.identity(m.create());
@@ -390,38 +452,26 @@ function bindInSphere(_c,_gl,_overallData,_centerPosition,_upPosition,_inSphereD
     var tmpMatrix = m.identity(m.create());
     var mvpMatrix = m.identity(m.create());
     // ビュー×プロジェクション座標変換行列
-    //var eyePosition=[0.0, 0.0, -5.0];
     var eyePosition=[0.0, 0.0, 5.0];
     var centerPosition=[0.0, 0.0, 0.0];
     var upPosition=[0.0, 1.0, 0.0];
-    //m.lookAt(eyePosition, centerPosition, upPosition, vMatrix);
     m.perspective(45, _c.width / _c.height, 0.1, 100, pMatrix);
     m.multiply(pMatrix, vMatrix, tmpMatrix);
 
 
-var q=new qtnIV();
-var camQ=q.identity(q.create());
-var camW=q.identity(q.create());
-var camH=q.identity(q.create());
+    var q=new qtnIV();
+    var camQ=q.identity(q.create());
+    var camW=q.identity(q.create());
+    var camH=q.identity(q.create());
 
-q.rotate(radW,[0,1,0],camW);
-q.rotate(radH,[1,0,0],camH);
-//q.multiply(camW,camH,camQ);
-q.multiply(camH,camW,camQ);
-var camUp=[];
-var camforward=[];
-q.toVecIII(upPosition,camQ,camUp);
-//q.toVecIII([0.0,0.0,1.0],camQ,camforward);
-q.toVecIII([0.0,0.0,-1.0],camQ,camforward);
+    q.rotate(radW,[0,1,0],camW);
+    q.rotate(radH,[1,0,0],camH);
+    q.multiply(camH,camW,camQ);
+    var camUp=[];
+    var camforward=[];
+    q.toVecIII(upPosition,camQ,camUp);
+    q.toVecIII([0.0,0.0,-1.0],camQ,camforward);
 
-/*------------------カメラを回転させているけど、まだカメラの向きがいまいち-----------------------------*/
-    //centerPosition=[eyePosition[0]+Math.cos(radW)*5.0,eyePosition[1]+Math.sin(radH)*5.0,eyePosition[2]+Math.sin(radW)*5.0];
-    //upPosition=[upPosition[0],Math.sin(radH),upPosition[2]+Math.cos(radH)];
-    //upPosition=[upPosition[0],Math.sin(radH),upPosition[2]];
-  //  console.log("centerPosition"+centerPosition);
-    //console.log("upPosition"+upPosition);
-    // ビュー×プロジェクション座標変換行列
-    //m.lookAt(eyePosition, centerPosition, upPosition, vMatrix);
     var eyeCam=[];
     eyeCam[0]=eyePosition[0]+camforward[0];
     eyeCam[1]=eyePosition[1]+camforward[1];
@@ -431,10 +481,12 @@ q.toVecIII([0.0,0.0,-1.0],camQ,camforward);
     m.multiply(pMatrix, vMatrix, tmpMatrix);
 
 
+_gl.bindFramebuffer(_gl.FRAMEBUFFER,_fBuffer.f);
     // canvasを初期化
     _gl.clearColor(0.0,0.0,0.0,1.0);
     _gl.clearDepth(1.0);
     _gl.clear(_gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT);
+
 
     _gl.useProgram(_overallData.prg);
     // ブレンディングを無効にする
@@ -483,12 +535,14 @@ q.toVecIII([0.0,0.0,-1.0],camQ,camforward);
             _posZm.shift();
             _getnumber--;
         }
-        bindPlatePoly(_gl,_m,mMatrix,_rad,tmpMatrix,mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i],true);
+        bindPlatePoly(_gl,m,mMatrix,tmpMatrix,mvpMatrix,_overallData.uniLocation,i,_posX[i],_posY[i],_posZ[i],_posXm[i],_posYm[i],_posZm[i],true);
        }
    }
 
+_gl.bindFramebuffer(_gl.FRAMEBUFFER,null);
+
 }
-function bindPlatePoly(_gl,_m,_mMatrix,_rad,_tmpMatrix,_mvpMatrix,_uniLocation,_number,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_scaleFrag){
+function bindPlatePoly(_gl,_m,_mMatrix,_tmpMatrix,_mvpMatrix,_uniLocation,_number,_posX,_posY,_posZ,_posXm,_posYm,_posZm,_scaleFrag){
     // モデル座標変換行列の生成
     _m.identity(_mMatrix);
     _m.translate(_mMatrix,[_posX,_posY,_posZ],_mMatrix);
@@ -755,4 +809,3 @@ function create_framebuffer(_gl,_width, _height){
     // オブジェクトを返して終了
     return {f : frameBuffer, d : depthRenderBuffer, t : fTexture};
 }
-    

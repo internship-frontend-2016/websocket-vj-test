@@ -8,16 +8,24 @@
         <script src="./js/lib.js" type="text/javascript"></script>
         <script src="./js/vj-screen.js" type="text/javascript"></script>
         <!-- 背景シェーダー -->
-        <script id="tfs" type="x-shader/x-fragment">
-            <% include copy/tfs.fs %>
-        </script>
         <script id="tvs" type="x-shader/x-vertex">
                 <% include copy/tvs.vs %>
+        </script>
+        <script id="tfs" type="x-shader/x-fragment">
+            <% include copy/tfs.fs %>
         </script>
 
         <!-- 背景シェーダー2つめフラグメントシェーダ -->
         <script id="intensiveFs" type="x-shader/x-fragment">
             <% include copy/intensive.fs %>
+        </script>
+
+        <!-- 3つめのシェーダー(ズームブラー) -->
+        <script id="zoom.vs" type="x-shader/x-vertex">
+                <% include copy/zoom.vs %>
+        </script>
+        <script id="zoom.fs" type="x-shader/x-fragment">
+            <% include copy/zoom.fs %>
         </script>
 
         <!-- テクスチャシェーダー -->
